@@ -64,7 +64,7 @@ Multiplicative inverse in S5 can be expressed in Scheme as:
 For efficency, we use pre-computed tables in this implementation.
 */
 
-public class S5 {
+public final class S5 {
 	public static final byte I     =   0; 
 	public static final byte A     =  33; 
 	public static final byte B     =  71; 
@@ -213,33 +213,4 @@ public class S5 {
 
 	@SuppressWarnings("unused")
 	private static boolean inited = ldm0() && ldm1();
-	
-	// s.length == p.length + 1
-	public static byte eval(byte[] p, byte[] s) {
-		byte a = S5.I;
-		for (int i = 0; i < p.length; i++) a = gmul[gmul[a][s[i]]][p[i]];
-		return gmul[a][s[p.length]];
-	}
-	
-	// r.length == 2 * d.length + 1
-	public static void blind(byte r[], byte d[], byte o[]) {
-		for (int i = 0; i < d.length; i++) o[i] = gmul[gmul[r[2*i]][d[i]]][ginv[r[2*i+1]]];
-	}
-
-	public static void main(String[] args) {	
-		System.out.println("inv of " + S5.A + " is " + S5.ginv[S5.A] + " = " + S5.AI);
-		System.out.println("mul of " + S5.A + " and " + S5.AI + " = " + S5.gmul[S5.A][S5.AI]);
-	
-		byte l[] = new byte[121];
-		for (int i = 0; i < 120; i++) l[i]=(byte)i;
-		l[120] = S5.A;
-		
-		System.out.println("eval " + eval(ginv,l));
-		
-		long t0, t1;
-		t0 = System.currentTimeMillis();
-		for (int j = 0; j < 10000; j++) eval(ginv,l);
-		t1 = System.currentTimeMillis();
-		System.out.println("Eval: " + (t1 - t0) + " ms");
-	}
 }
