@@ -1,4 +1,6 @@
 package com.cosocket.deed;
+import java.security.SecureRandom;
+
 import  com.cosocket.deed.S5;
 
 /*
@@ -83,13 +85,18 @@ public class Evalprep {
         return sgp;
     }
     
-    public static final void pblind(byte r[], byte d[], byte o[]) {
+    public static final void randseq(SecureRandom prng, byte[] rseq) {
+        prng.nextBytes(rseq);
+        for (int i = 0; i < rseq.length; i++) rseq[i] = (byte)((rseq[i] & 0x7f) % 120);
+    }
+    
+    public static final void pblind(byte[] r, byte[] d, byte[] o) {
         assert(r.length >= 2 * d.length - 1);
         for (int i = 0; i < d.length; i++) 
             o[i] = S5.gmul[S5.gmul[r[2*i]][d[i]]][S5.ginv[r[2*i+1]]];
     }
     
-    public static final void sblind(byte r[], byte d[], byte o[]) {
+    public static final void sblind(byte[] r, byte[] d, byte[] o) {
         assert(r.length >= 2 * d.length - 2);
         o[0]=S5.gmul[d[0]][S5.ginv[r[0]]];
         for (int i = 1; i < d.length - 1; i++) 
