@@ -1,6 +1,6 @@
 package com.cosocket.deed;
-import java.util.Arrays;
-import  com.cosocket.deed.S5;
+import java.util.ArrayList;
+import com.cosocket.deed.S5;
 
 /*
 Copyright (c) 2014, Cosocket LLC
@@ -33,66 +33,83 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 public class GP {
-    public static final boolean eval(byte[] p, byte[] s) throws Exception {
-        assert(s.length == p.length + 1);
-        byte a = S5.I;
-        for (int i = 0; i < p.length; i++) a = S5.gmul[S5.gmul[a][s[i]]][p[i]];
-        a = S5.gmul[a][s[p.length]];
-        if(!(a == S5.A || a == S5.I)) throw new Exception("Not alpha-computing");
-        return a == S5.A;
-    }
-    
-    public static final void int2pubgp(int md, int n, int m, byte[] pgp) {
-        assert(n<=64);
-        assert(pgp.length == 2*m*n);
-        Arrays.fill(pgp, (byte)0);
-        for(int i = 0; i < n; i++) 
-            if((md & (1<<i)) != 0) 
-                for (int j = 0; j < m; j++) {pgp[2*(j*n+i)]=S5.A; pgp[2*(j*n+i)+1]=S5.AI;}
-    }
-    
-    /**
-     * Pad and selectorize the input GP 
-     * Given input gp, a byte array containing a canonical GP of length <= 2*m + 1
-     * and an output sgp, a byte array of length 2 * m * n + 1
-     * where n is the known maximum length of metadata in bits
-     * and m is the known maximum number of elements in canonical group program is 2m+1
-     * 
-     * Initialize an array of bytes of length 2*m*n + 1 to I (which is 0)
-     * Replace elements of array at index: j*n with Sj for j in 0,2,… in canonical GP
-     * To select input bit Pj (Pj in 0..n-1) at j in 1,3,... in canonical GP
-     *   pre-multiply element at index: (j-1)*n+2*Pj+1 with B, (j-1)*n+2*Pj+2 with BI
-     *   pre- and post-multiply each selector block with G2AL and G2AR respectively 
-     * 
-     */
-    public static final void selectorize(byte[] gp, int n, int m, byte[] sgp) {
-        assert(gp.length % 2 == 1);
-        assert(gp.length <= 2*m + 1);
-        assert(sgp.length == 2*m*n + 1);
-        Arrays.fill(sgp, (byte)0);
-        for (int j = 0; j < gp.length; j+=2) sgp[j*n] = gp[j];
-        for (int j = 0; j < gp.length - 1; j+=2) {
-            int p    = j*n;
-            int k    = p+1+2*gp[j+1];
-            int q    = p+2*n;
-            sgp[p]   = S5.gmul[sgp[p]][S5.G2AL];
-            sgp[q]   = S5.gmul[S5.G2AR][sgp[q]];
-            sgp[k]   = S5.gmul[S5.B][sgp[k]];
-            sgp[k+1] = S5.gmul[S5.BI][sgp[k+1]];
-        }
-    }
-    
-    public static final void pblind(byte r[], byte d[], byte o[]) {
-        assert(r.length >= 2 * d.length - 1);
-        for (int i = 0; i < d.length; i++) 
-            o[i] = S5.gmul[S5.gmul[r[2*i]][d[i]]][S5.ginv[r[2*i+1]]];
-    }
-    
-    public static final void sblind(byte r[], byte d[], byte o[]) {
-        assert(r.length >= 2 * d.length - 2);
-        o[0]=S5.gmul[d[0]][S5.ginv[r[0]]];
-        for (int i = 1; i < d.length - 1; i++) 
-            o[i] = S5.gmul[S5.gmul[r[2*i-1]][d[i]]][S5.ginv[r[2*i]]];
-        o[d.length-1]=S5.gmul[r[2*d.length - 3]][d[d.length-1]];
-    }    
+	private static final byte GPLT0 = S5.G2AL;
+    private static final byte GPLT1 = S5.A2BL;	    
+    private static final byte GPLT2 = S5.gmul[S5.A2BR][S5.A2AIL];
+    private static final byte GPLT3 = S5.gmul[S5.A2AIR][S5.A2BIL];
+    private static final byte GPLT4 = S5.gmul[S5.A2BIR][S5.G2AR];
+
+    private int[] gp; 
+	public  int[] gp()  {return gp;};
+	private GP(int x)   {gp = new int[]{S5.I,x,S5.I};}
+	private GP(int[] x) {gp = x;}
+	
+	private static int[] invert(int[] x) {
+	    int[] gp = x.clone();
+	    int e     = gp.length - 1;
+	    gp[0]     = S5.gmul[S5.INVL][gp[0]];
+		gp[e]     = S5.gmul[gp[e]][S5.INVR];
+	    return gp;
+	}
+	
+	private static int[] conjunct(int[] lt, int[] rt) {		  	
+		int[] gp = new int[2 * (lt.length + rt.length) - 3];
+		int x     = 0;		    
+		gp[x]     = S5.gmul[GPLT0][lt[0]];
+		System.arraycopy(lt,1,gp,x+1,lt.length-1);		    
+		x         = x + lt.length - 1;		    
+		gp[x]     = S5.gmul[S5.gmul[gp[x]][GPLT1]][rt[0]];
+		System.arraycopy(rt,1,gp,x+1,rt.length-1);
+		x         = x + rt.length - 1;
+		gp[x]     = S5.gmul[S5.gmul[gp[x]][GPLT2]][lt[0]];
+		System.arraycopy(lt,1,gp,x+1,lt.length-1);
+		x         = x + lt.length - 1;
+		gp[x]     = S5.gmul[S5.gmul[gp[x]][GPLT3]][rt[0]];
+		System.arraycopy(rt,1,gp,x+1,rt.length-1);
+		x         = x + rt.length - 1;		    
+		gp[x]     = S5.gmul[gp[x]][GPLT4];
+		return gp;
+	}
+		
+	public static final GP Pin(int a)                   {return new GP(a);}
+	public static final GP Not(GP a)                    {return new GP(invert(a.gp()));}
+	public static final GP And(GP a, GP b)              {return new GP(conjunct(a.gp(), b.gp()));}
+	public static final GP Nand(GP a, GP b)             {return Not(And(a, b));}
+	public static final GP Nor(GP a, GP b)              {return And(Not(a), Not(b));}
+	public static final GP Or(GP a, GP b)               {return Not(Nor(a, b));}	
+	public static final GP Xor(GP a, GP b)              {return Or(And(Not(a),b), And(a,Not(b)));}
+	public static final GP Equal(GP a, GP b)            {return Or(And(a,b), And(Not(a),Not(b)));}
+	public static final GP Select(GP x, GP a, GP b)     {return Or(And(Not(x), a), And(x,b));}
+	public static final GP IfThenElse(GP x, GP a, GP b) {return Or(And(x, a), And(Not(x),b));}
+	public static final GP MultiNand(ArrayList<GP> x)   {return Not(MultiAnd(x));}
+	public static final GP MultiNor(ArrayList<GP> x)    {return Not(MultiOr(x));}
+	
+	public static final GP MultiAnd(ArrayList<GP> x) {
+		while(x.size() > 1) {
+		    ArrayList<GP> y = new ArrayList<GP>();
+		    while(x.size() > 1) y.add(And(x.remove(0),x.remove(0)));
+		    if(x.size()==1)     y.add(x.remove(0));
+		    x = y;
+		}
+		return x.remove(0);
+	}
+	
+	public static final GP MultiOr(ArrayList<GP> x) {
+		ArrayList<GP> y = new ArrayList<GP>();
+		for (GP c : x)  y.add(Not(c));
+		return Not(MultiAnd(y));
+	}
+	
+	public static final GP MultiEqual(ArrayList<GP> x, ArrayList<GP> y) {
+		assert(x.size() == y.size());
+		ArrayList<GP> z = new ArrayList<GP>();
+        for(int i = 0; i < x.size(); i++) z.add(Equal(x.get(i), y.get(i)));
+		return MultiAnd(z);
+	}
+	
+	/*
+	 * TODO: greater-than, add, subtract, parity, k-of-n threshold, ...
+	   public static final GP Greater(ArrayList<GP> x, ArrayList<GP> y) {
+	   }
+	*/
 }
