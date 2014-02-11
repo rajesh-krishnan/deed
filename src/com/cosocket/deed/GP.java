@@ -83,6 +83,10 @@ public class GP {
     public static final GP IfThenElse(GP x, GP a, GP b) {return Or(And(x, a), And(Not(x),b));}
     public static final GP MultiNand(ArrayList<GP> x)   {return Not(MultiAnd(x));}
     public static final GP MultiNor(ArrayList<GP> x)    {return Not(MultiOr(x));}
+    public static final GP AddSum(GP a, GP b, GP c)     {return Xor(Xor(a,b),c);}
+    public static final GP AddCarry(GP a, GP b, GP c)   {return Or(And(a,b), And(Or(a,b),c));}
+    public static final GP SubDiff(GP a, GP b, GP c)    {return AddSum(a,b,c);}
+    public static final GP SubBorrow(GP a, GP b, GP c)  {return Or(And(a, And(b,c)), And(Not(a), Or(b,c)));}
     
     public static final GP MultiAnd(ArrayList<GP> x) {
         while(x.size() > 1) {
