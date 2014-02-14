@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <IntelMetadata>
-  <Fields>Recordtype Threat Region Contact Urgency Importance Timescale</Fields>
-  <Recordtype>INTELRECORD</Recordtype>
-  <Threat>CYBER</Threat>
-  <Region>PACOM</Region>
-  <Contact>BOND</Contact>
-  <Urgency>LOW</Urgency>
-  <Importance>HIGH</Importance>
-  <Timescale>DAYS</Timescale>
+  <FIELDSENUM>IntelRecordFields</FIELDSENUM>
+  <RECORDTYPE>INTELRECORD</RECORDTYPE>
+  <THREAT>CYBER</THREAT>
+  <REGION>PACOM</REGION>
+  <CONTACT>BOND</CONTACT>
+  <URGENCY>LOW</URGENCY>
+  <IMPORTANCE>HIGH</IMPORTANCE>
+  <TIMESCALE>DAYS</TIMESCALE>
 </IntelMetadata>

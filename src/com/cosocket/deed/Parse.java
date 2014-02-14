@@ -75,9 +75,11 @@ public class Parse {
 		
         if (x instanceof IntelRecord) { // OR other metadata types as they are defined
             ArrayList<BitFld> bfArr = new ArrayList<BitFld>();
-            for (String c : ((IntelRecord) x).getFields()) {
-        	    Object y = IntelRecord.class.getMethod("get" + c).invoke(x);
-        	    if(y.getClass().isEnum()) {
+            Class<?> cls = Class.forName(IntelRecord.class.getPackage().getName() + "." + ((IntelRecord) x).getFIELDSENUM());
+            
+            for (Object ec : cls.getEnumConstants()) {
+                Object y = IntelRecord.class.getMethod("get" + ec.toString()).invoke(x);
+            	if(y.getClass().isEnum()) {
         	        Enum<?> z      = (Enum<?>) y;
         	        BitFld bf      = new Parse.BitFld();
         	        bf.name        = z.toString();
@@ -106,5 +108,15 @@ public class Parse {
 	    }
 	    
 		return null;
-    }	       
+    }	 
+	
+    public static void main(String[] args) throws Exception {    	
+    	String METADATA_XML   = "xml/mdrecord-example.xml";
+    	String DEEDSCHEMA_XSD = "xml/deedschema.xsd";
+        int n = 64;
+        int m = 16000;
+    	int[] x = Parse.parseInterestXML(DEEDSCHEMA_XSD, METADATA_XML, n, m); 
+    	//for (int i : x) System.out.println(i + " ");
+    	if(x != null) System.out.println();
+    }	
 }

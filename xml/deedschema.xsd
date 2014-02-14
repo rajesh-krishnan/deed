@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
      Fixed records of non-extensible enumerations of xsd:string are supported 
      Support for xsd:int and xsd:binary fields are anticipated in the future
 
-     Keep names in UpperCamelCase
+     Keep type names in UpperCamelCase
      Keep enum elements in CAPITAL, else you must use an annotation such as:
      <xsd:enumeration value="unCapital">
        <xsd:annotation>
@@ -54,17 +54,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
      Records include the Recordtype and the FieldSequence for ease of encoding
 -->
 
-<xsd:element name="Interest" type="Expr"/>
+<xsd:element name="F" type="Expr"/>
 <xsd:complexType name="Expr">
   <xsd:sequence>
-    <xsd:element name="Arg"        type="Expr" minOccurs="0" maxOccurs="unbounded"/>
+    <xsd:element name="F"          type="Term" minOccurs="0" maxOccurs="unbounded"/>
   </xsd:sequence>
-  <xsd:attribute name="Op"         type="OpCode"  />
 </xsd:complexType>
 
-<xsd:simpleType name="OpCode" final="#all">
+<xsd:complexType name="Term">
+  <xsd:sequence>
+    <xsd:element name="TermType" type="xsd:string"/>
+    <xsd:element name="Value"    type="xsd:string"/>
+  </xsd:sequence>
+</xsd:complexType>
+
+<xsd:simpleType name="Op" final="#all">
   <xsd:restriction base="xsd:string">
-    <xsd:enumeration value="FIELD"/>
     <xsd:enumeration value="CONSTANT"/>
     <xsd:enumeration value="OR"/>
     <xsd:enumeration value="AND"/>
@@ -85,16 +90,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <xsd:complexType name="IntelRecord">
   <xsd:sequence>
-    <xsd:element name="Fields"     type="FieldSequence"  fixed="Recordtype Threat Region Contact Urgency Importance Timescale" />
-    <xsd:element name="Recordtype" type="RecordtypeCode" fixed="INTELRECORD"/>
-    <xsd:element name="Threat"     type="ThreatCode"/>
-    <xsd:element name="Region"     type="RegionCode"/>
-    <xsd:element name="Contact"    type="ContactCode"/>
-    <xsd:element name="Urgency"    type="LevelCode"/>
-    <xsd:element name="Importance" type="LevelCode"/>
-    <xsd:element name="Timescale"  type="TimescaleCode"/>
+    <xsd:element name="FIELDSENUM" type="xsd:string"     fixed="IntelRecordFields" />
+    <xsd:element name="RECORDTYPE" type="RecordtypeCode" fixed="INTELRECORD"/>
+    <xsd:element name="THREAT"     type="ThreatCode"/>
+    <xsd:element name="REGION"     type="RegionCode"/>
+    <xsd:element name="CONTACT"    type="ContactCode"/>
+    <xsd:element name="URGENCY"    type="LevelCode"/>
+    <xsd:element name="IMPORTANCE" type="LevelCode"/>
+    <xsd:element name="TIMESCALE"  type="TimescaleCode"/>
   </xsd:sequence>
 </xsd:complexType>
+
+<xsd:simpleType name="IntelRecordFields">
+  <xsd:restriction base="xsd:string">
+    <xsd:enumeration value="RECORDTYPE"/>
+    <xsd:enumeration value="THREAT"/>
+    <xsd:enumeration value="REGION"/>
+    <xsd:enumeration value="CONTACT"/>
+    <xsd:enumeration value="URGENCY"/>
+    <xsd:enumeration value="IMPORTANCE"/>
+    <xsd:enumeration value="TIMESCALE"/>
+  </xsd:restriction>
+</xsd:simpleType>
 
 <xsd:simpleType name="ThreatCode" final="#all">
   <xsd:restriction base="xsd:string">

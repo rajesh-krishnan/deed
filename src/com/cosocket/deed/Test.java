@@ -37,7 +37,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 public class Test {
 	public static final String METADATA_XML   = "xml/mdrecord-example.xml";
 	public static final String DEEDSCHEMA_XSD = "xml/deedschema.xsd";
-	
+	    
+    protected static int[] testMetadata1(int n) {    
+        int[] tmp = new int[(n - 1)/32 + 1];    
+        Evalprep.setbit(tmp, 0);
+        Evalprep.setbit(tmp, 1);
+        return tmp;
+    }
+    
     protected static int[] testInterest1(int n, int m) {    
         GP ct;        
         ArrayList<GP> x = new ArrayList<GP>();
@@ -50,22 +57,15 @@ public class Test {
         ct = GP.MultiEqual(x,y);
         return ct.gp();
     }
-    
-    protected static int[] testMetadata1(int n) {    
-        int[] tmp = new int[(n - 1)/32 + 1];    
-        Evalprep.setbit(tmp, 0);
-        Evalprep.setbit(tmp, 1);
-        return tmp;
-    }
-    
+
     protected static int[] testMetadata2(int n) throws Exception {  
     	return Parse.parseMetadataXML(DEEDSCHEMA_XSD, METADATA_XML, n); 
     }
     
-    protected static int[] testMetadata2(int n, int m) throws Exception {  
-    	return Parse.parseMetadataXML(DEEDSCHEMA_XSD, METADATA_XML, n); 
+    protected static int[] testInterest2(int n, int m) throws Exception {  
+    	return Parse.parseInterestXML(DEEDSCHEMA_XSD, METADATA_XML, n, m); 
     }
-      
+       
     public static void main(String[] args) throws Exception {            
         long t0,t1;
         t0 = System.currentTimeMillis();
@@ -75,8 +75,8 @@ public class Test {
         // At publisher
         SecureRandom prng = SecureRandom.getInstance("SHA1PRNG");
         prng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});        
-        int[] md = testMetadata1(n);
-        // int[] md = testMetadata2(n);
+        //int[] md = testMetadata1(n);
+        int[] md = testMetadata2(n);
         
         for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(md, k) ? 1 : 0);
         System.out.println();  
