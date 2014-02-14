@@ -1,5 +1,6 @@
 package com.cosocket.deed;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import com.cosocket.deed.Evalprep;
 import com.cosocket.deed.Parse;
 
@@ -34,6 +35,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 public class Test {
+	public static final String METADATA_XML   = "xml/mdrecord-example.xml";
+	public static final String DEEDSCHEMA_XSD = "xml/deedschema.xsd";
+	
+    protected static int[] testInterest1(int n, int m) {    
+        GP ct;        
+        ArrayList<GP> x = new ArrayList<GP>();
+        ArrayList<GP> y = new ArrayList<GP>();
+        for (short i=0; i<4; i++) x.add(GP.Pin(i));
+        y.add(GP.Const(true));
+        y.add(GP.Const(true));
+        y.add(GP.Const(false));
+        y.add(GP.Const(false));
+        ct = GP.MultiEqual(x,y);
+        return ct.gp();
+    }
+    
+    protected static int[] testMetadata1(int n) {    
+        int[] tmp = new int[(n - 1)/32 + 1];    
+        Evalprep.setbit(tmp, 0);
+        Evalprep.setbit(tmp, 1);
+        return tmp;
+    }
+    
+    protected static int[] testMetadata2(int n) throws Exception {  
+    	return Parse.parseMetadataXML(DEEDSCHEMA_XSD, METADATA_XML, n); 
+    }
+    
+    protected static int[] testMetadata2(int n, int m) throws Exception {  
+    	return Parse.parseMetadataXML(DEEDSCHEMA_XSD, METADATA_XML, n); 
+    }
+      
     public static void main(String[] args) throws Exception {            
         long t0,t1;
         t0 = System.currentTimeMillis();
@@ -43,7 +75,12 @@ public class Test {
         // At publisher
         SecureRandom prng = SecureRandom.getInstance("SHA1PRNG");
         prng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});        
-        int[] md = Parse.parseMetadata("hhhh", n);
+        int[] md = testMetadata1(n);
+        // int[] md = testMetadata2(n);
+        
+        for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(md, k) ? 1 : 0);
+        System.out.println();  
+       
         byte[] pgp = Evalprep.mdelements(md,n,m);
         byte[] prseq = new byte[4*m*n];
         Evalprep.randseq(prng, prseq);
@@ -53,7 +90,8 @@ public class Test {
         // At subscriber
         SecureRandom srng = SecureRandom.getInstance("SHA1PRNG");
         srng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});
-        int[] si = Parse.parseInterest("hhhh", m);        
+        int[] si = testInterest1(n, m);
+        // int[] si = testInterest2(n, m);
         byte[] sgp = Evalprep.selectorize(si,n,m);
         byte[] srseq = new byte[4*m*n];
         Evalprep.randseq(srng, srseq);        

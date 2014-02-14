@@ -1,6 +1,5 @@
 package com.cosocket.deed;
 import java.security.SecureRandom;
-
 import  com.cosocket.deed.S5;
 
 /*

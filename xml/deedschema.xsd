@@ -55,9 +55,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <xsd:element name="Interest" type="Expr"/>
-<xsd:complexType name="Expr"></xsd:complexType>
+<xsd:complexType name="Expr">
+  <xsd:sequence>
+    <xsd:element name="Arg"        type="Expr" minOccurs="0" maxOccurs="unbounded"/>
+  </xsd:sequence>
+  <xsd:attribute name="Op"         type="OpCode"  />
+</xsd:complexType>
+
+<xsd:simpleType name="OpCode" final="#all">
+  <xsd:restriction base="xsd:string">
+    <xsd:enumeration value="FIELD"/>
+    <xsd:enumeration value="CONSTANT"/>
+    <xsd:enumeration value="OR"/>
+    <xsd:enumeration value="AND"/>
+    <xsd:enumeration value="NOT"/>
+  </xsd:restriction>
+</xsd:simpleType>
  
 <xsd:element name="IntelMetadata" type="IntelRecord"/>
+
+<xsd:simpleType name="FieldSequence"><xsd:list itemType="xsd:string"/></xsd:simpleType>
 
 <xsd:simpleType name="RecordtypeCode" final="#all">
   <xsd:restriction base="xsd:string">
@@ -65,8 +82,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <xsd:enumeration value="INTELRECORD"/>
   </xsd:restriction>
 </xsd:simpleType>
-
-<xsd:simpleType name="FieldSequence"><xsd:list itemType="xsd:string"/></xsd:simpleType>
 
 <xsd:complexType name="IntelRecord">
   <xsd:sequence>

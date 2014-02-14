@@ -40,9 +40,10 @@ public class GP {
     private static final byte GPLT4 = S5.gmul[S5.A2BIR][S5.G2AR];
 
     private int[] gp; 
-    public  int[] gp()  {return gp;};
-    private GP(int x)   {gp = new int[]{S5.I,x,S5.I};}
-    private GP(int[] x) {gp = x;}
+    public  int[] gp()    {return gp;};
+    private GP(boolean x) {gp = new int[]{x ? S5.A : S5.I};}
+    private GP(int x)     {gp = new int[]{S5.I,x,S5.I};}
+    private GP(int[] x)   {gp = x;}
     
     private static int[] invert(int[] x) {
         int[] gp = x.clone();
@@ -70,7 +71,8 @@ public class GP {
         gp[x]     = S5.gmul[gp[x]][GPLT4];
         return gp;
     }
-        
+    
+    public static final GP Const(boolean a)             {return new GP(a);}    
     public static final GP Pin(int a)                   {return new GP(a);}
     public static final GP Not(GP a)                    {return new GP(invert(a.gp()));}
     public static final GP And(GP a, GP b)              {return new GP(conjunct(a.gp(), b.gp()));}

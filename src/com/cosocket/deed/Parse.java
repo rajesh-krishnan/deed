@@ -39,9 +39,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-public class Parse { 
-	public static final String METADATA_XML   = "xml/mdrecord-example.xml";
-	public static final String DEEDSCHEMA_XSD = "xml/deedschema.xsd";
+public class Parse {
     protected static class BitFld {String name; int ordinal; int cardinality; int bits;}
 	
 	private static <T> T unmarshal(Class<T> rtClass, String schFile, String xmlFile) throws Exception {
@@ -59,7 +57,20 @@ public class Parse {
 		return root.getValue();
 	}
 	
-	public static int[] parseInterestXML(String schFile, String xmlFile, int n) throws Exception { 
+    private static final int[] packbits(ArrayList<BitFld> bfArr, int n) throws Exception {         
+        int[] result = new int[(n - 1) / 32 + 1];      
+        int index = 0;
+        for (BitFld bf : bfArr)
+        	for(int j=0; j < bf.bits; j++) {            		
+        		if(((bf.ordinal >> j) & 1) == 1) Evalprep.setbit(result, index);
+        		index++;
+        	}         	      
+        // for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(result, k) ? 1 : 0);
+        // System.out.println();        
+        return result;
+    }
+    
+	public static int[] parseMetadataXML(String schFile, String xmlFile, int n) throws Exception { 
 		Object x = unmarshal(IntelRecord.class, schFile, xmlFile);
 		
         if (x instanceof IntelRecord) { // OR other metadata types as they are defined
@@ -87,50 +98,13 @@ public class Parse {
         return null;
     }
 
-    private static final int[] packbits(ArrayList<BitFld> bfArr, int n) throws Exception {         
-        int[] result = new int[(n - 1) / 32 + 1];      
-        int index = 0;
-        for (BitFld bf : bfArr)
-        	for(int j=0; j < bf.bits; j++) {            		
-        		if(((bf.ordinal >> j) & 1) == 1) Evalprep.setbit(result, index);
-        		index++;
-        	}         	      
-        // for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(result, k) ? 1 : 0);
-        // System.out.println();        
-        return result;
-    }
-	
-    public static int[] parseInterest(String s, int m) throws Exception {    
-        GP ct;
-        
-        // faking for now
-        ArrayList<GP> x = new ArrayList<GP>();
-        for (short i=0; i<64; i++) x.add(GP.Pin(i));
-        ct = GP.MultiOr(x);
-        
-        if(ct.gp().length > m) throw new Exception ("GP too long");
-        return ct.gp();
-    }
-    
-    public static int[] parseMetadata(String p, int n) throws Exception {    
-        int maxlen = (n - 1)/32 + 1;
-        
-        // faking for now
-        int[] tmp = new int[1];    
-        tmp[0] = 1;         
+	public static int[] parseInterestXML(String schFile, String xmlFile, int n, int m) throws Exception { 
+		Object x = unmarshal(Expr.class, schFile, xmlFile);
 
-        if (tmp.length == maxlen) return tmp;
-        if (tmp.length > maxlen) throw new Exception ("metadata too long");
- 
-        int[] md = new int[maxlen];
-        System.arraycopy(tmp,0,md,0,tmp.length);
-        return md;
-    }    
-      
-    public static void main(String[] args) throws Exception {
-    	int n = 64;
-	    int[] result= parseInterestXML(DEEDSCHEMA_XSD, METADATA_XML, n);    	
-        for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(result, k) ? 1 : 0);
-        System.out.println(); 
-    }
+	    if (x instanceof Expr) {
+        // parse interest into GP
+	    }
+	    
+		return null;
+    }	       
 }
