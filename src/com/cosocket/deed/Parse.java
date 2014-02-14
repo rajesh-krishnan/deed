@@ -1,6 +1,13 @@
 package com.cosocket.deed;
+import java.io.File;
 import java.util.ArrayList;
-//import javax.xml.parsers;
+import javax.xml.XMLConstants;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import com.cosocket.deed.xjcgen.*;
 
 /*
 Copyright (c) 2014, Cosocket LLC
@@ -32,14 +39,67 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-public class Parse {    
-    // expression and DTD syntax
-    // md2intarray
-    // exp2gp
-    
-    // XSD for record and query syntax, record definition (fields/enums), record instance, query instance
-    // need metadata
+public class Parse { 
+	public static final String METADATA_XML   = "xml/mdrecord-example.xml";
+	public static final String DEEDSCHEMA_XSD = "xml/deedschema.xsd";
+    protected static class BitFld {String name; int ordinal; int cardinality; int bits;}
+	
+	private static <T> T unmarshal(Class<T> rtClass, String schFile, String xmlFile) throws Exception {
+		Schema mySchema;
+		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		mySchema = sf.newSchema(new File(schFile));
 
+		String packageName = rtClass.getPackage().getName();
+		JAXBContext jc = JAXBContext.newInstance(packageName);
+		Unmarshaller u = jc.createUnmarshaller();
+		u.setSchema(mySchema);
+		
+		@SuppressWarnings("unchecked")
+		JAXBElement<T> root = (JAXBElement<T>)u.unmarshal(new File(xmlFile));
+		return root.getValue();
+	}
+	
+	public static int[] parseInterestXML(String schFile, String xmlFile, int n) throws Exception { 
+		Object x = unmarshal(IntelRecord.class, schFile, xmlFile);
+		
+        if (x instanceof IntelRecord) { // OR other metadata types as they are defined
+            ArrayList<BitFld> bfArr = new ArrayList<BitFld>();
+            for (String c : ((IntelRecord) x).getFields()) {
+        	    Object y = IntelRecord.class.getMethod("get" + c).invoke(x);
+        	    if(y.getClass().isEnum()) {
+        	        Enum<?> z      = (Enum<?>) y;
+        	        BitFld bf      = new Parse.BitFld();
+        	        bf.name        = z.toString();
+        	        bf.ordinal     = z.ordinal();
+        	        bf.cardinality = z.getClass().getEnumConstants().length;
+        	        bf.bits        = Evalprep.bitsNeeded(bf.cardinality);
+        	        bfArr.add(bf);            	    
+        	    }
+        	    // handle xsd:int and xsd:binary here 
+            }
+            
+            // for (BitFld bf : bfArr) System.out.println(bf.name + ", " + bf.ordinal + ", " + bf.cardinality + ", " + bf.bits);
+            int totalbits = 0;
+            for (BitFld bf : bfArr) totalbits += bf.bits;
+            if(totalbits > n) throw new Exception("Too many bits needed");
+            return packbits(bfArr, n);
+        }
+        return null;
+    }
+
+    private static final int[] packbits(ArrayList<BitFld> bfArr, int n) throws Exception {         
+        int[] result = new int[(n - 1) / 32 + 1];      
+        int index = 0;
+        for (BitFld bf : bfArr)
+        	for(int j=0; j < bf.bits; j++) {            		
+        		if(((bf.ordinal >> j) & 1) == 1) Evalprep.setbit(result, index);
+        		index++;
+        	}         	      
+        // for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(result, k) ? 1 : 0);
+        // System.out.println();        
+        return result;
+    }
+	
     public static int[] parseInterest(String s, int m) throws Exception {    
         GP ct;
         
@@ -66,4 +126,11 @@ public class Parse {
         System.arraycopy(tmp,0,md,0,tmp.length);
         return md;
     }    
+      
+    public static void main(String[] args) throws Exception {
+    	int n = 64;
+	    int[] result= parseInterestXML(DEEDSCHEMA_XSD, METADATA_XML, n);    	
+        for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(result, k) ? 1 : 0);
+        System.out.println(); 
+    }
 }

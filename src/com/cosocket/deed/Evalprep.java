@@ -44,6 +44,9 @@ public class Evalprep {
     }
     
     public static final boolean getbit(int[] d, int j) {return (((d[(j / 32)] >>> (j % 32)) & 1) != 0);}
+    public static final void setbit(int[] d, int j) {d[(j / 32)] |= (1 << (j % 32));}
+    public static final void clearbit(int[] d, int j) {d[(j / 32)] &= ~(1 << (j % 32));}
+    public static final int bitsNeeded(int a) {return a == 0 ? 0 : 32 - Integer.numberOfLeadingZeros(a - 1);}
     
     public static final byte[] mdelements(int[] md, int n, int m) {
         assert(md.length == ((n - 1) / 32) + 1);

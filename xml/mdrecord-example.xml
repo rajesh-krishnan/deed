@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Metadata xmlns="deedschema.xsd">
-  <IntelRecord>
-    <Recordtype>INTELRECORD</Recordtype>
-    <Fields>Threat Region Contact Urgency Importance Timescale</Fields>
-    <Threat>CYBER</Threat>
-    <Region>PACOM</Region>
-    <Contact>BOND</Contact>
-    <Urgency>LOW</Urgency>
-    <Importance>HIGH</Importance>
-    <Timescale>DAYS</Timescale>
-  </IntelRecord>
-</Metadata>
+<IntelMetadata>
+  <Fields>Recordtype Threat Region Contact Urgency Importance Timescale</Fields>
+  <Recordtype>INTELRECORD</Recordtype>
+  <Threat>CYBER</Threat>
+  <Region>PACOM</Region>
+  <Contact>BOND</Contact>
+  <Urgency>LOW</Urgency>
+  <Importance>HIGH</Importance>
+  <Timescale>DAYS</Timescale>
+</IntelMetadata>
