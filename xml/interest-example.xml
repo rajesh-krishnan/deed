@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<E OP="AND">
+  <E OP="EQUAL">
+    <E OP="FIELD" TYP="INTELRECORD" VAL="RECORDTYPE" />
+    <E OP="CODE" TYP="RECORDTYPECODE" VAL="INTELRECORD" />
+  </E>
+  <E OP="OR">
+    <E OP="EQUAL">
+      <E OP="FIELD" TYP="INTELRECORD" VAL="URGENCY"/>
+      <E OP="CODE" TYP="LEVELCODE"   VAL="HIGH"/>
+    </E>
+    <E OP="AND">
+      <E OP="NOT">
+        <E OP="EQUAL">
+          <E OP="FIELD" TYP="INTELRECORD" VAL="IMPORTANCE"/>
+          <E OP="CODE" TYP="LEVELCODE"   VAL="LOW"/>
+        </E>
+      </E>
+      <E OP="EQUAL">
+        <E OP="FIELD" TYP="INTELRECORD" VAL="THREAT"/>
+        <E OP="CODE" TYP="THREATCODE"   VAL="CYBER"/>
+      </E>
+    </E>
+  </E>      
+</E>

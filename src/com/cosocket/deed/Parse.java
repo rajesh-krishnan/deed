@@ -1,6 +1,10 @@
 package com.cosocket.deed;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -40,83 +44,143 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 public class Parse {
-    protected static class BitFld {String name; int ordinal; int cardinality; int bits;}
-	
-	private static <T> T unmarshal(Class<T> rtClass, String schFile, String xmlFile) throws Exception {
-		Schema mySchema;
-		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-		mySchema = sf.newSchema(new File(schFile));
+  	private Unmarshaller u;
+	private Hashtable<String,String[]> classFields;
+  	private Hashtable<String,String>   fieldTypeTbl;
+	private Hashtable<String,Integer>  fieldStartTbl;
+	private Hashtable<String,Integer>  fieldSizeTbl;
+	private Hashtable<String,Integer>  ordinalValueTbl;
+	private String[] getFields(String className)                    {return classFields.get(className);}
+	private String   fieldType(String className, String fieldName)  {return fieldTypeTbl.get(className + ":" + fieldName);}
+	private int      fieldStart(String className, String fieldName) {return fieldStartTbl.get(className + ":" + fieldName);}
+	private int      fieldSize(String fieldType)                    {return fieldSizeTbl.get(fieldType);}
+	private int      ordinalValue(String fieldType, String value)   {return ordinalValueTbl.get(fieldType + ":" + value);}
 
-		String packageName = rtClass.getPackage().getName();
-		JAXBContext jc = JAXBContext.newInstance(packageName);
-		Unmarshaller u = jc.createUnmarshaller();
-		u.setSchema(mySchema);
-		
-		@SuppressWarnings("unchecked")
-		JAXBElement<T> root = (JAXBElement<T>)u.unmarshal(new File(xmlFile));
-		return root.getValue();
+	// Assumes RECORDTYPE and RECORDTYPECODE exists in JAXB generated code
+	public Parse(String schFile) throws Exception  {
+		String pkgName  = RECORDTYPECODE.class.getPackage().getName();
+		u               = Parse.createUnmarshaller(pkgName, schFile);
+		classFields     = new Hashtable<String,String[]>();
+		fieldTypeTbl    = new Hashtable<String,String>();
+		fieldStartTbl   = new Hashtable<String,Integer>();
+		fieldSizeTbl    = new Hashtable<String,Integer>();
+		ordinalValueTbl = new Hashtable<String,Integer>();
+		for(RECORDTYPECODE r : RECORDTYPECODE.class.getEnumConstants()) 
+		   	determineSizes(Class.forName(pkgName + "." + r.toString()));
 	}
 	
-    private static final int[] packbits(ArrayList<BitFld> bfArr, int n) throws Exception {         
-        int[] result = new int[(n - 1) / 32 + 1];      
-        int index = 0;
-        for (BitFld bf : bfArr)
-        	for(int j=0; j < bf.bits; j++) {            		
-        		if(((bf.ordinal >> j) & 1) == 1) Evalprep.setbit(result, index);
-        		index++;
-        	}         	      
-        // for (int k = 0; k < n; k++) System.out.print(Evalprep.getbit(result, k) ? 1 : 0);
-        // System.out.println();        
-        return result;
-    }
-    
-	public static int[] parseMetadataXML(String schFile, String xmlFile, int n) throws Exception { 
-		Object x = unmarshal(IntelRecord.class, schFile, xmlFile);
-		
-        if (x instanceof IntelRecord) { // OR other metadata types as they are defined
-            ArrayList<BitFld> bfArr = new ArrayList<BitFld>();
-            Class<?> cls = Class.forName(IntelRecord.class.getPackage().getName() + "." + ((IntelRecord) x).getFIELDSENUM());
-            
-            for (Object ec : cls.getEnumConstants()) {
-                Object y = IntelRecord.class.getMethod("get" + ec.toString()).invoke(x);
-            	if(y.getClass().isEnum()) {
-        	        Enum<?> z      = (Enum<?>) y;
-        	        BitFld bf      = new Parse.BitFld();
-        	        bf.name        = z.toString();
-        	        bf.ordinal     = z.ordinal();
-        	        bf.cardinality = z.getClass().getEnumConstants().length;
-        	        bf.bits        = Evalprep.bitsNeeded(bf.cardinality);
-        	        bfArr.add(bf);            	    
-        	    }
-        	    // handle xsd:int and xsd:binary here 
-            }
-            
-            // for (BitFld bf : bfArr) System.out.println(bf.name + ", " + bf.ordinal + ", " + bf.cardinality + ", " + bf.bits);
-            int totalbits = 0;
-            for (BitFld bf : bfArr) totalbits += bf.bits;
-            if(totalbits > n) throw new Exception("Too many bits needed");
-            return packbits(bfArr, n);
-        }
-        return null;
-    }
-
-	public static int[] parseInterestXML(String schFile, String xmlFile, int n, int m) throws Exception { 
-		Object x = unmarshal(Expr.class, schFile, xmlFile);
-
-	    if (x instanceof Expr) {
-        // parse interest into GP
-	    }
-	    
-		return null;
-    }	 
+    private static Unmarshaller createUnmarshaller(String packageName, String schFile) throws Exception {
+	    Schema mySchema;
+		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		mySchema = sf.newSchema(new File(schFile));		
+		JAXBContext jc = JAXBContext.newInstance(packageName);
+		Unmarshaller u = jc.createUnmarshaller();
+		u.setSchema(mySchema);		
+		return u;
+	}
 	
-    public static void main(String[] args) throws Exception {    	
-    	String METADATA_XML   = "xml/mdrecord-example.xml";
-    	String DEEDSCHEMA_XSD = "xml/deedschema.xsd";
-        int n = 64;
-        int m = 16000;
-    	int[] x = Parse.parseInterestXML(DEEDSCHEMA_XSD, METADATA_XML, n, m); 
-    	//for (int i : x) System.out.println(i + " ");
-    	if(x != null) System.out.println();
-    }	
+    private void determineSizes(Class<?> cls) throws Exception {		
+    	ArrayList<String> flds = new ArrayList<String>();
+    	String className = cls.getSimpleName();
+    	for (Method m : cls.getDeclaredMethods()) {
+    		String str = m.getName();
+    		if (str.matches("get[A-Z](.*)")) {
+    			String fieldName = str.substring(3);
+       	    	if(!fieldName.equals("RECORDTYPE")) flds.add(fieldName);
+    			Class<?> fld = (Class<?>) m.getGenericReturnType();
+    			String fieldType = fld.getSimpleName();
+    			if(fld.isEnum()) {
+        	        int fieldSize = Evalprep.bitsNeeded(fld.getEnumConstants().length);
+        	    	fieldTypeTbl.put(className + ":" + fieldName, fieldType);
+        	    	fieldSizeTbl.put(fieldType,fieldSize);
+    				for (Object x : fld.getEnumConstants())
+            	    	ordinalValueTbl.put(fieldType + ":" + x.toString(), ((Enum<?>) x).ordinal());
+        	    } // handle xsd:int and xsd:binary here? 
+    		}
+    	}
+	  	int index=0; // use alphabetical order as reflection does not guarantee declaration order
+	  	Collections.sort(flds);	  	
+	  	flds.add(0,"RECORDTYPE");
+	  	classFields.put(className, flds.toArray(new String[flds.size()]));
+    	for (String f : flds) {
+    	    fieldStartTbl.put(className + ":" + f, index);
+    	    index += fieldSize(fieldType(className,f));
+    	}
+    }
+		
+	public int[] parseMetadataXML(String xmlFile, int n) throws Exception {	
+		JAXBElement<?> root = (JAXBElement<?>)u.unmarshal(new File(xmlFile));
+		Object cls = root.getValue();		
+		String className = cls.getClass().getSimpleName();
+		int[] result = new int[(n - 1) / 32 + 1];    
+    	for (String fieldName : getFields(className)) {
+    	    String fieldType = this.fieldType(className, fieldName);
+    	    Object y = cls.getClass().getMethod("get" + fieldName).invoke(cls);  			
+            if(y.getClass().isEnum()) {            		
+        	    String value = y.toString();
+        	    int index = this.fieldStart(className, fieldName);
+        	    int szbits = this.fieldSize(fieldType);
+        	    int ordval = this.ordinalValue(fieldType, value); 
+        	    for(int j=0; j < szbits; j++)            		
+                	if(((ordval >> j) & 1) == 1) Evalprep.setbit(result, index+j);
+        	} // handle xsd:int and xsd:binary here? 
+    	}		
+		return result;
+    }
+	
+	public int[] parseInterestXML(String xmlFile, int n, int m) throws Exception { 
+		JAXBElement<?> root = (JAXBElement<?>)u.unmarshal(new File(xmlFile));
+		Object x = root.getValue();
+	    if (!(x instanceof EXPR)) throw new Exception("Expecting EXPR");
+	    int[] result = recurse((EXPR) x).gp();
+	    if(result.length <= 2*m+1) return result; 
+	    else throw new Exception("GP too big");
+    }
+	
+	private GP recurse(EXPR y) throws Exception {
+		List<EXPR> exps = y.getE();
+    	ArrayList<GP> args = new ArrayList<GP>();
+    	
+		switch(y.getOP()) {
+        case NOT:
+        	if (exps.size() != 1) throw new Exception("NOT takes one argument");
+        	return GP.Not(recurse(exps.get(0)));
+		case AND: 
+        	for(EXPR e : exps) args.add(recurse(e));
+        	return GP.MultiAnd(args);
+		case OR:
+        	for(EXPR e : exps) args.add(recurse(e));
+        	return GP.MultiOr(args);
+		case EQUAL:  
+			if (exps.size() != 2) throw new Exception("EQUAL takes two arguments");
+			return GP.MultiEqual(multibit(exps.get(0)),multibit(exps.get(1)));		
+        default: 
+        	throw new Exception("Unsupported");
+        }
+    } 	
+	
+	private ArrayList<GP> multibit(EXPR y) throws Exception {
+    	String mdT, mdV;
+		ArrayList<GP> result = new ArrayList<GP>();
+		int x, sz;
+		
+    	switch(y.getOP()) {
+	    case CODE: 
+    	    mdT = y.getTYP();
+    	    mdV = y.getVAL();
+	    	x   = ordinalValue(mdT, mdV); 
+	    	sz  = fieldSize(mdT);
+	    	for(int j = 0; j < sz; j++) result.add(GP.Const(((x >> j) & 1) == 1));	    	
+    	    return result;
+        case FIELD:
+    	    mdT = y.getTYP();
+    	    mdV = y.getVAL();
+	    	x   = fieldStart(mdT, mdV); 
+	    	sz  = fieldSize(fieldType(mdT,mdV));
+    	    for(int j = 0; j < sz; j++) result.add(GP.Pin(x + j)); 
+        	return result;
+        default: 
+    	    throw new Exception("Unsupported");
+        } 	
+	}	
 }

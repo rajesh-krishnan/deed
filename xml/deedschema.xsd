@@ -43,77 +43,61 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
      Fixed records of non-extensible enumerations of xsd:string are supported 
      Support for xsd:int and xsd:binary fields are anticipated in the future
 
-     Keep type names in UpperCamelCase
-     Keep enum elements in CAPITAL, else you must use an annotation such as:
-     <xsd:enumeration value="unCapital">
-       <xsd:annotation>
-         <xsd:appinfo><jxb:typesafeEnumMember name="unCapital"/></xsd:appinfo>
-       </xsd:annotation> 
-     </xsd:enumeration>   
-     
-     Records include the Recordtype and the FieldSequence for ease of encoding
+     Using CAPITAL for enums to be automatically typesafe without JAXB annotations
+        
+     RECORDTYPE is always the first field and supported records are enumerated in RECORDTYPECODE
 -->
 
-<xsd:element name="F" type="Expr"/>
-<xsd:complexType name="Expr">
+<xsd:element name="E" type="EXPR"/>
+
+<xsd:complexType name="EXPR">
   <xsd:sequence>
-    <xsd:element name="F"          type="Term" minOccurs="0" maxOccurs="unbounded"/>
+    <xsd:element name="E"          type="EXPR" minOccurs="0" maxOccurs="unbounded"/>
   </xsd:sequence>
+  <xsd:attribute name="OP" type="OPCODE" use="required"/>
+  <xsd:attribute name="TYP" type="xsd:string"/>
+  <xsd:attribute name="VAL" type="xsd:string"/>
 </xsd:complexType>
 
-<xsd:complexType name="Term">
-  <xsd:sequence>
-    <xsd:element name="TermType" type="xsd:string"/>
-    <xsd:element name="Value"    type="xsd:string"/>
-  </xsd:sequence>
-</xsd:complexType>
-
-<xsd:simpleType name="Op" final="#all">
+<xsd:simpleType name="OPCODE" final="#all">
   <xsd:restriction base="xsd:string">
-    <xsd:enumeration value="CONSTANT"/>
-    <xsd:enumeration value="OR"/>
-    <xsd:enumeration value="AND"/>
+    <xsd:enumeration value="CODE"/>
+    <xsd:enumeration value="FIELD"/>
     <xsd:enumeration value="NOT"/>
+    <xsd:enumeration value="AND"/>
+    <xsd:enumeration value="OR"/>
+    <xsd:enumeration value="EQUAL"/>
   </xsd:restriction>
 </xsd:simpleType>
  
-<xsd:element name="IntelMetadata" type="IntelRecord"/>
+<xsd:element name="INTELMETADATA" type="INTELRECORD"/>
 
-<xsd:simpleType name="FieldSequence"><xsd:list itemType="xsd:string"/></xsd:simpleType>
-
-<xsd:simpleType name="RecordtypeCode" final="#all">
+<xsd:simpleType name="RECORDTYPECODE" final="#all">
   <xsd:restriction base="xsd:string">
-    <xsd:enumeration value="UNDEF"/>
+    <xsd:enumeration value="ZERORECORD"/>
     <xsd:enumeration value="INTELRECORD"/>
   </xsd:restriction>
 </xsd:simpleType>
 
-<xsd:complexType name="IntelRecord">
-  <xsd:sequence>
-    <xsd:element name="FIELDSENUM" type="xsd:string"     fixed="IntelRecordFields" />
-    <xsd:element name="RECORDTYPE" type="RecordtypeCode" fixed="INTELRECORD"/>
-    <xsd:element name="THREAT"     type="ThreatCode"/>
-    <xsd:element name="REGION"     type="RegionCode"/>
-    <xsd:element name="CONTACT"    type="ContactCode"/>
-    <xsd:element name="URGENCY"    type="LevelCode"/>
-    <xsd:element name="IMPORTANCE" type="LevelCode"/>
-    <xsd:element name="TIMESCALE"  type="TimescaleCode"/>
-  </xsd:sequence>
+<xsd:complexType name="ZERORECORD">
+  <xsd:all>
+    <xsd:element name="RECORDTYPE" type="RECORDTYPECODE" fixed="ZERORECORD"/>
+  </xsd:all>
 </xsd:complexType>
 
-<xsd:simpleType name="IntelRecordFields">
-  <xsd:restriction base="xsd:string">
-    <xsd:enumeration value="RECORDTYPE"/>
-    <xsd:enumeration value="THREAT"/>
-    <xsd:enumeration value="REGION"/>
-    <xsd:enumeration value="CONTACT"/>
-    <xsd:enumeration value="URGENCY"/>
-    <xsd:enumeration value="IMPORTANCE"/>
-    <xsd:enumeration value="TIMESCALE"/>
-  </xsd:restriction>
-</xsd:simpleType>
+<xsd:complexType name="INTELRECORD">
+  <xsd:all>
+    <xsd:element name="RECORDTYPE" type="RECORDTYPECODE" fixed="INTELRECORD"/>
+    <xsd:element name="CONTACT"    type="CONTACTCODE"/>
+    <xsd:element name="IMPORTANCE" type="LEVELCODE"/>
+    <xsd:element name="REGION"     type="REGIONCODE"/>
+    <xsd:element name="THREAT"     type="THREATCODE"/>
+    <xsd:element name="TIMESCALE"  type="TIMESCALECODE"/>
+    <xsd:element name="URGENCY"    type="LEVELCODE"/>
+  </xsd:all>
+</xsd:complexType>
 
-<xsd:simpleType name="ThreatCode" final="#all">
+<xsd:simpleType name="THREATCODE" final="#all">
   <xsd:restriction base="xsd:string">
     <xsd:enumeration value="UNDEF"/>
     <xsd:enumeration value="CYBER"/>
@@ -124,7 +108,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </xsd:restriction>
 </xsd:simpleType>
 
-<xsd:simpleType name="RegionCode" final="#all">
+<xsd:simpleType name="REGIONCODE" final="#all">
   <xsd:restriction base="xsd:string">
     <xsd:enumeration value="UNDEF"/>
     <xsd:enumeration value="PACOM"/>
@@ -136,27 +120,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </xsd:restriction>
 </xsd:simpleType>
 
-<xsd:simpleType name="ContactCode" final="#all">
+<xsd:simpleType name="CONTACTCODE" final="#all">
   <xsd:restriction base="xsd:string">
     <xsd:enumeration value="UNDEF"/>
-    <xsd:enumeration value="A1"/>
-    <xsd:enumeration value="A2"/>
-    <xsd:enumeration value="A3"/>
-    <xsd:enumeration value="A4"/>
-    <xsd:enumeration value="A5"/>
-    <xsd:enumeration value="A6"/>
+    <xsd:enumeration value="A_1"/>
+    <xsd:enumeration value="A_2"/>
+    <xsd:enumeration value="A_3"/>
+    <xsd:enumeration value="A_4"/>
+    <xsd:enumeration value="A_5"/>
+    <xsd:enumeration value="A_6"/>
     <xsd:enumeration value="BOND"/>
   </xsd:restriction>
 </xsd:simpleType>
 
-<xsd:simpleType name="LevelCode" final="#all">
+<xsd:simpleType name="LEVELCODE" final="#all">
   <xsd:restriction base="xsd:string">
+    <xsd:enumeration value="UNDEF"/>
     <xsd:enumeration value="LOW"/>
+    <xsd:enumeration value="MEDIUM"/>
     <xsd:enumeration value="HIGH"/>
   </xsd:restriction>
 </xsd:simpleType>
 
-<xsd:simpleType name="TimescaleCode" final="#all">
+<xsd:simpleType name="TIMESCALECODE" final="#all">
   <xsd:restriction base="xsd:string">
     <xsd:enumeration value="PAST"/>
     <xsd:enumeration value="SECONDS"/>
