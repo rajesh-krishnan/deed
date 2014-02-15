@@ -1,4 +1,5 @@
 package com.cosocket.deed;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import com.cosocket.deed.S5;
 
@@ -80,7 +81,7 @@ public class GP {
     public static final GP Nor(GP a, GP b)              {return And(Not(a), Not(b));}
     public static final GP Or(GP a, GP b)               {return Not(Nor(a, b));}    
     public static final GP Xor(GP a, GP b)              {return Or(And(Not(a),b), And(a,Not(b)));}
-    public static final GP Equal(GP a, GP b)            {return Or(And(a,b), And(Not(a),Not(b)));}
+    public static final GP Xnor(GP a, GP b)             {return Or(And(a,b), And(Not(a),Not(b)));}
     public static final GP Select(GP x, GP a, GP b)     {return Or(And(Not(x), a), And(x,b));}
     public static final GP IfThenElse(GP x, GP a, GP b) {return Or(And(x, a), And(Not(x),b));}
     public static final GP MultiNand(ArrayList<GP> x)   {return Not(MultiAnd(x));}
@@ -106,15 +107,43 @@ public class GP {
         return Not(MultiAnd(y));
     }
     
-    public static final GP MultiEqual(ArrayList<GP> x, ArrayList<GP> y) {
+    public static final GP Equal(ArrayList<GP> x, ArrayList<GP> y) {
         assert(x.size() == y.size());
         ArrayList<GP> z = new ArrayList<GP>();
-        for(int i = 0; i < x.size(); i++) z.add(Equal(x.get(i), y.get(i)));
+        for(int i = 0; i < x.size(); i++) z.add(Xnor(x.get(i), y.get(i)));
         return MultiAnd(z);
     }
+
+    // make a block of 2-input Boolean gates
+    public static final ArrayList<GP> BitOpBlock(ArrayList<GP> x, ArrayList<GP> y, String boolMethod) throws Exception {
+        assert(x.size() == y.size());
+        ArrayList<GP> z = new ArrayList<GP>();
+        Method M = GP.class.getMethod(boolMethod, GP.class, GP.class);
+        for(int i = 0; i < x.size(); i++) z.add((GP)M.invoke(GP.class, x.get(i), y.get(i)));
+        return z;
+    }
     
+    public static final ArrayList<GP> IfThenElseBlock(GP cond, ArrayList<GP> x, ArrayList<GP> y) {
+        assert(x.size() == y.size());
+        ArrayList<GP> z = new ArrayList<GP>();
+        for(int i = 0; i < x.size(); i++) z.add(IfThenElse(cond, x.get(i), y.get(i)));
+        return z;
+    }
+    
+    public static final ArrayList<GP> ShiftRight(ArrayList<GP> x, int num) {
+        assert(x.size() >= num);
+        for(int i = 0; i < num; i++) {x.remove(0); x.add(GP.Const(false));}
+        return x;
+    }
+    
+    public static final ArrayList<GP> ShiftLeft(ArrayList<GP> x, int num) {
+        assert(x.size() >= num);
+        for(int i = 0; i < num; i++) {x.remove(x.size()-1); x.add(0,GP.Const(false));}
+        return x;
+    }
+       
     /*
-     * TODO: greater-than, add, subtract, parity, k-of-n threshold, ...
+     * TODO: greater-than, add, subtract, parity, k-of-n threshold, majority, ...
        public static final GP Greater(ArrayList<GP> x, ArrayList<GP> y) {
        }
     */

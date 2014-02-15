@@ -153,7 +153,7 @@ public class Parse {
         	return GP.MultiOr(args);
 		case EQUAL:  
 			if (exps.size() != 2) throw new Exception("EQUAL takes two arguments");
-			return GP.MultiEqual(multibit(exps.get(0)),multibit(exps.get(1)));		
+			return GP.Equal(multibit(exps.get(0)),multibit(exps.get(1)));		
         default: 
         	throw new Exception("Unsupported");
         }
