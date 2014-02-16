@@ -3,32 +3,32 @@ import java.security.SecureRandom;
 import  com.cosocket.deed.S5;
 
 /*
-Copyright (c) 2014, Cosocket LLC
+Copyright (c) 2014, Cosocket 
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice, this
+* Redistributions of source code must retain the above copyright notice, 
   list of conditions and the following disclaimer.
 
-* Redistributions in binary form must reproduce the above copyright notice, this
-  list of conditions and the following disclaimer in the documentation and/or
+* Redistributions in binary form must reproduce the above copyright notice, 
+  list of conditions and the following disclaimer in the documentation and/
   other materials provided with the distribution.
 
-* Neither the name of the {organization} nor the names of its
-  contributors may be used to endorse or promote products derived from
+* Neither the name of the {organization} nor the names of 
+  contributors may be used to endorse or promote products derived 
   this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR 
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
@@ -58,15 +58,15 @@ public class Evalprep {
     
     /**
      * Pad and selectorize the input GP 
-     * Given input gp, a byte array containing a canonical GP of length <= 2*m + 1
-     * and an output sgp, a byte array of length 2 * m * n + 1
-     * where n is the known maximum length of metadata in bits
-     * and m is the known maximum number of elements in canonical group program is 2m+1
+     * Given input gp, a byte array containing a canonical GP of length <= 2*m + 
+     * and an output sgp, a byte array of length 2 * m * n + 
+     * where n is the known maximum length of metadata in 
+     * and m is the known maximum number of elements in canonical group program is 2m+
      * 
      * Initialize an array of elements of length 2*m*n + 1 to I (which is 0)
-     * Replace elements of array at index: j*n with Sj for j in 0,2,… in canonical GP
-     * To select input bit Pj (Pj in 0..n-1) at j in 1,3,... in canonical GP
-     *   pre-multiply element at index: (j-1)*n+2*Pj+1 with B, (j-1)*n+2*Pj+2 with BI
+     * Replace elements of array at index: j*n with Sj for j in 0,2,… in canonical 
+     * To select input bit Pj (Pj in 0..n-1) at j in 1,3,... in canonical 
+     *   pre-multiply element at index: (j-1)*n+2*Pj+1 with B, (j-1)*n+2*Pj+2 with 
      *   pre- and post-multiply each selector block with G2AL and G2AR respectively 
      * 
      */
