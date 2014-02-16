@@ -3,49 +3,49 @@
             xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
             jxb:version="2.0">
 
-<!-- 
-Copyright (c) 2014, Cosocket 
+<!--
+Copyright (c) 2014, Cosocket
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice, 
+* Redistributions of source code must retain the above copyright notice,
   list of conditions and the following disclaimer.
 
-* Redistributions in binary form must reproduce the above copyright notice, 
+* Redistributions in binary form must reproduce the above copyright notice,
   list of conditions and the following disclaimer in the documentation and/
   other materials provided with the distribution.
 
-* Neither the name of the {organization} nor the names of 
-  contributors may be used to endorse or promote products derived 
+* Neither the name of the {organization} nor the names of
+  contributors may be used to endorse or promote products derived
   this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<!-- 
-     XML Schema for DEED metadata record and interest expression 
+<!--
+     XML Schema for DEED metadata record and interest expression
      Author: Dr. Rajesh Krishnan <krash@cosocket.com>
 
      The DEED parser relies on Java code generated from this file using JAXB:
      xjc -d <srcdir> -p com.cosocket.deed.xjcgen deedschema.
-     
-     Fixed records of non-extensible enumerations of xsd:string are supported 
-     Support for xsd:int and xsd:binary fields are anticipated in the 
 
-     Using CAPITAL for enums to be automatically typesafe without JAXB 
-        
-     RECORDTYPE is always the first field and supported records are enumerated in 
+     Fixed records of non-extensible enumerations of xsd:string are supported
+     Support for xsd:int and xsd:binary fields are anticipated in the
+
+     Using CAPITAL for enums to be automatically typesafe without JAXB
+
+     RECORDTYPE is always the first field and supported records are enumerated in
 -->
 
 <xsd:element name="E" type="EXPR"/>
@@ -64,16 +64,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <xsd:enumeration value="FIELD"/>
     <xsd:enumeration value="CODE"/>
     <xsd:enumeration value="NUM"/>
-    <xsd:enumeration value="EIGHTBYTE"/>
+    <xsd:enumeration value="SIXPACK"/>
     <xsd:enumeration value="NOT"/>
     <xsd:enumeration value="AND"/>
     <xsd:enumeration value="OR"/>
     <xsd:enumeration value="EQUAL"/>
+    <xsd:enumeration value="GREATER"/>
+    <xsd:enumeration value="LESSER"/>
+    <xsd:enumeration value="GREATEROREQUAL"/>
+    <xsd:enumeration value="LESSEROREQUAL"/>
   </xsd:restriction>
 </xsd:simpleType>
 
 <!--  Supported metadata record types -->
-<xsd:element name="ZEROMETADATA"  type="ZERORECORD"/> 
+<xsd:element name="ZEROMETADATA"  type="ZERORECORD"/>
 <xsd:element name="INTELMETADATA" type="INTELRECORD"/>
 <xsd:element name="STOCKMETADATA" type="STOCKRECORD"/>
 <xsd:simpleType name="RECORDTYPECODE" final="#all">
@@ -95,41 +99,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <xsd:element name="RECORDTYPE" type="RECORDTYPECODE" fixed="STOCKRECORD"/>
     <xsd:element name="STOCKSYM"   type="STOCKSYMVAL"/>
     <xsd:element name="TICK"       type="TICKCODE"/>
-    <xsd:element name="POINTS"     type="POINTSVAL"/>
-    <xsd:element name="PRICE"      type="PRICEVAL"/>
-    <xsd:element name="TIME"       type="UNIXTIMEVAL"/>
+    <xsd:element name="POINTS"     type="xsd:byte"/>
+    <xsd:element name="PRICE"      type="xsd:int"/>
+    <xsd:element name="TIME"       type="xsd:int"/>
   </xsd:all>
 </xsd:complexType>
 
-<!--  For now, we limit all strings to length 8 bytes or less -->
-<xsd:simpleType name="EIGHTBYTESTR">
+<!--  For now, we limit all strings to length 6 bytes or less -->
+<xsd:simpleType name="SIXPACK">
   <xsd:restriction base="xsd:string">
-    <xsd:maxLength value="8"/>
+    <xsd:maxLength value="6"/>
   </xsd:restriction>
 </xsd:simpleType>
 
 <xsd:simpleType name="STOCKSYMVAL" final="#all">
-  <xsd:restriction base="EIGHTBYTESTR">
+  <xsd:restriction base="SIXPACK">
     <xsd:pattern   value="[A-Z]+"/>
     <xsd:maxLength value="5"/>
-  </xsd:restriction>
-</xsd:simpleType>
-
-<xsd:simpleType name="UNIXTIMEVAL" final="#all">
-  <xsd:restriction base="xsd:int" />
-</xsd:simpleType>
-
-<xsd:simpleType name="PRICEVAL" final="#all">
-  <xsd:restriction base="xsd:int">
-    <xsd:minInclusive value="0"/>
-    <xsd:maxInclusive value="100000000"/> <!-- $1M in cents -->
-  </xsd:restriction>
-</xsd:simpleType>
-   
-<xsd:simpleType name="POINTSVAL" final="#all">
-  <xsd:restriction base="xsd:short">
-    <xsd:minInclusive value="0"/>
-    <xsd:maxInclusive value="10000"/> <!-- (100.00 percent) * 100 -->
   </xsd:restriction>
 </xsd:simpleType>
 

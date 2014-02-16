@@ -4,48 +4,48 @@ import java.util.ArrayList;
 import com.cosocket.deed.S5;
 
 /*
-Copyright (c) 2014, Cosocket 
+Copyright (c) 2014, Cosocket
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice, 
+* Redistributions of source code must retain the above copyright notice,
   list of conditions and the following disclaimer.
 
-* Redistributions in binary form must reproduce the above copyright notice, 
+* Redistributions in binary form must reproduce the above copyright notice,
   list of conditions and the following disclaimer in the documentation and/
   other materials provided with the distribution.
 
-* Neither the name of the {organization} nor the names of 
-  contributors may be used to endorse or promote products derived 
+* Neither the name of the {organization} nor the names of
+  contributors may be used to endorse or promote products derived
   this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 public class GP {
     private static final byte GPLT0 = S5.G2AL;
-    private static final byte GPLT1 = S5.A2BL;        
+    private static final byte GPLT1 = S5.A2BL;
     private static final byte GPLT2 = S5.gmul[S5.A2BR][S5.A2AIL];
     private static final byte GPLT3 = S5.gmul[S5.A2AIR][S5.A2BIL];
     private static final byte GPLT4 = S5.gmul[S5.A2BIR][S5.G2AR];
 
-    private int[] gp; 
+    private int[] gp;
     public  int[] gp()    {return gp;};
     private GP(boolean x) {gp = new int[]{x ? S5.A : S5.I};}
     private GP(int x)     {gp = new int[]{S5.I,x,S5.I};}
     private GP(int[] x)   {gp = x;}
-    
+
     private static int[] invert(int[] x) {
         int[] gp = x.clone();
         int e     = gp.length - 1;
@@ -53,13 +53,13 @@ public class GP {
         gp[e]     = S5.gmul[gp[e]][S5.INVR];
         return gp;
     }
-    
-    private static int[] conjunct(int[] lt, int[] rt) {              
+
+    private static int[] conjunct(int[] lt, int[] rt) {
         int[] gp = new int[2 * (lt.length + rt.length) - 3];
-        int x     = 0;            
+        int x     = 0;
         gp[x]     = S5.gmul[GPLT0][lt[0]];
-        System.arraycopy(lt,1,gp,x+1,lt.length-1);            
-        x         = x + lt.length - 1;            
+        System.arraycopy(lt,1,gp,x+1,lt.length-1);
+        x         = x + lt.length - 1;
         gp[x]     = S5.gmul[S5.gmul[gp[x]][GPLT1]][rt[0]];
         System.arraycopy(rt,1,gp,x+1,rt.length-1);
         x         = x + rt.length - 1;
@@ -68,18 +68,18 @@ public class GP {
         x         = x + lt.length - 1;
         gp[x]     = S5.gmul[S5.gmul[gp[x]][GPLT3]][rt[0]];
         System.arraycopy(rt,1,gp,x+1,rt.length-1);
-        x         = x + rt.length - 1;            
+        x         = x + rt.length - 1;
         gp[x]     = S5.gmul[gp[x]][GPLT4];
         return gp;
     }
-    
-    public static final GP Const(boolean a)             {return new GP(a);}    
+
+    public static final GP Const(boolean a)             {return new GP(a);}
     public static final GP Pin(int a)                   {return new GP(a);}
     public static final GP Not(GP a)                    {return new GP(invert(a.gp()));}
     public static final GP And(GP a, GP b)              {return new GP(conjunct(a.gp(), b.gp()));}
     public static final GP Nand(GP a, GP b)             {return Not(And(a, b));}
     public static final GP Nor(GP a, GP b)              {return And(Not(a), Not(b));}
-    public static final GP Or(GP a, GP b)               {return Not(Nor(a, b));}    
+    public static final GP Or(GP a, GP b)               {return Not(Nor(a, b));}
     public static final GP Xor(GP a, GP b)              {return Or(And(Not(a),b), And(a,Not(b)));}
     public static final GP Xnor(GP a, GP b)             {return Or(And(a,b), And(Not(a),Not(b)));}
     public static final GP Select(GP x, GP a, GP b)     {return Or(And(Not(x), a), And(x,b));}
@@ -90,7 +90,7 @@ public class GP {
     public static final GP AddCarry(GP a, GP b, GP c)   {return Or(And(a,b), And(Or(a,b),c));}
     public static final GP SubDiff(GP a, GP b, GP c)    {return AddSum(a,b,c);}
     public static final GP SubBorrow(GP a, GP b, GP c)  {return Or(And(a, And(b,c)), And(Not(a), Or(b,c)));}
-    
+
     public static final GP MultiAnd(ArrayList<GP> x) {
         while(x.size() > 1) {
             ArrayList<GP> y = new ArrayList<GP>();
@@ -100,13 +100,13 @@ public class GP {
         }
         return x.remove(0);
     }
-    
+
     public static final GP MultiOr(ArrayList<GP> x) {
         ArrayList<GP> y = new ArrayList<GP>();
         for (GP c : x)  y.add(Not(c));
         return Not(MultiAnd(y));
     }
-    
+
     public static final GP Equal(ArrayList<GP> x, ArrayList<GP> y) {
         assert(x.size() == y.size());
         ArrayList<GP> z = new ArrayList<GP>();
@@ -114,7 +114,7 @@ public class GP {
         return MultiAnd(z);
     }
 
-    // make a block of 2-input Boolean 
+    // make a block of 2-input Boolean
     public static final ArrayList<GP> BitOpBlock(ArrayList<GP> x, ArrayList<GP> y, String boolMethod) throws Exception {
         if(x.size() != y.size()) throw new Exception ("Unequal length");
         ArrayList<GP> z = new ArrayList<GP>();
@@ -122,40 +122,57 @@ public class GP {
         for(int i = 0; i < x.size(); i++) z.add((GP)M.invoke(GP.class, x.get(i), y.get(i)));
         return z;
     }
-    
+
     public static final ArrayList<GP> IfThenElseBlock(GP cond, ArrayList<GP> x, ArrayList<GP> y) throws Exception {
         if(x.size() != y.size()) throw new Exception ("Unequal length");
         ArrayList<GP> z = new ArrayList<GP>();
         for(int i = 0; i < x.size(); i++) z.add(IfThenElse(cond, x.get(i), y.get(i)));
         return z;
     }
-    
+
     public static final ArrayList<GP> ShiftRight(ArrayList<GP> x, int num) {
         int rot = (num <= x.size()) ? num : x.size();
         for(int i = 0; i < rot; i++) {x.remove(0); x.add(GP.Const(false));}
         return x;
     }
-    
+
     public static final ArrayList<GP> ShiftLeft(ArrayList<GP> x, int num) {
         int rot = (num <= x.size()) ? num : x.size();
         for(int i = 0; i < rot; i++) {x.remove(x.size()-1); x.add(0,GP.Const(false));}
         return x;
     }
-       
-    /* 
-     * See Expired US Patent 
-     * 
+
+    /*
+     * See Expired US Patent 5592142
+     *
      * MultiOr(
-     *   (MultiNor (BlockXor x_0:x_k-1 y_0:y_k-1)) 
+     *   (MultiNor (BlockXor x_0:x_k-1 y_0:y_k-1))
      *   (MultiNor (BlockXor x_1:x_k-1 y_1:y_k-1) (Not x0) y0)
      *   (MultiNor (BlockXor x_2:x_k-1 y_2:y_k-1) (Not x1) y1)
      *    ...
      *   (MultiNor (BlockXor x_k-1:y_k-1) (Not x_k-2) y_k-2)
-     *   (MultiNor                        (Not x_k-1) y_k-1) 
+     *   (MultiNor                        (Not x_k-1) y_k-1)
      * )
      *
      */
-    
-   //public static final GP Greater(ArrayList<GP> x, ArrayList<GP> y) {
-    //}
+    public static final GP Lesser(ArrayList<GP> x, ArrayList<GP> y) throws Exception {return GP.Not(GreaterOrEqual(x,y));}
+    public static final GP Greater(ArrayList<GP> x, ArrayList<GP> y) throws Exception {return GP.Not(GreaterOrEqual(y,x));}
+    public static final GP LesserOrEqual(ArrayList<GP> x, ArrayList<GP> y) throws Exception {return GreaterOrEqual(y,x);}
+
+    public static final GP GreaterOrEqual(ArrayList<GP> x, ArrayList<GP> y) throws Exception {
+        int k = x.size();
+        if (y.size() != k) throw new Exception("lengths not equal");
+        ArrayList<GP> blockXor = BitOpBlock(x, y, "Xor");
+        ArrayList<GP> blockMultiNor = new ArrayList<GP>();
+        for(int j = 0; j <= k; j++) {
+            ArrayList<GP> tmp = new ArrayList<GP>();
+            for(int i = j; i < k; i++) tmp.add(blockXor.get(i));
+            if((j > 0) && (j <= k)) {
+                tmp.add(Not(x.get(j-1)));
+                tmp.add(y.get(j-1));
+            }
+            blockMultiNor.add(GP.MultiNor(tmp));
+        }
+        return MultiOr(blockMultiNor);
+    }
 }

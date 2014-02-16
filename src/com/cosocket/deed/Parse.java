@@ -69,7 +69,7 @@ public class Parse {
         fieldSizeTbl.put("short",16);
         fieldSizeTbl.put("int",32);
         fieldSizeTbl.put("long",64);
-        fieldSizeTbl.put("String", 64);  // fixed-width fields, so string must be 8 bytes or
+        fieldSizeTbl.put("String", 48);  // fixed-width fields, so string must be 6 bytes or less
         for(RECORDTYPECODE r : RECORDTYPECODE.class.getEnumConstants())
                determineSizes(Class.forName(pkgName + "." + r.toString()));
     }
@@ -112,11 +112,18 @@ public class Parse {
             index += fieldSize(fieldType(className,f));
         }
     }
+    
+    private int recordSize(String className) {
+        String[] classFields = getFields(className);
+        String lastField = classFields[classFields.length - 1];
+        return fieldStart(className, lastField) + fieldSize(fieldType(className, lastField));
+    }
 
     public int[] parseMetadataXML(String xmlFile, int n) throws Exception {
         JAXBElement<?> root = (JAXBElement<?>)u.unmarshal(new File(xmlFile));
         Object cls = root.getValue();
         String className = cls.getClass().getSimpleName();
+        if (recordSize(className) > n) throw new Exception("Metadata too large");
         int[] result = new int[(n - 1) / 32 + 1];
         for (String fieldName : getFields(className)) {
             String fieldType = this.fieldType(className, fieldName);
@@ -155,7 +162,6 @@ public class Parse {
     private GP recurse(EXPR y) throws Exception {
         List<EXPR> exps = y.getE();
         ArrayList<GP> args = new ArrayList<GP>();
-
         switch(y.getOP()) {
         case NOT:
             if (exps.size() != 1) throw new Exception("NOT takes one argument");
@@ -169,6 +175,18 @@ public class Parse {
         case EQUAL:
             if (exps.size() != 2) throw new Exception("EQUAL takes two arguments");
             return GP.Equal(multibit(exps.get(0)),multibit(exps.get(1)));
+        case GREATER:
+            if (exps.size() != 2) throw new Exception("GREATER takes two arguments");
+            return GP.Greater(multibit(exps.get(0)),multibit(exps.get(1)));
+        case LESSER:
+            if (exps.size() != 2) throw new Exception("LESSER takes two arguments");
+            return GP.Lesser(multibit(exps.get(0)),multibit(exps.get(1)));
+        case GREATEROREQUAL:
+            if (exps.size() != 2) throw new Exception("GREATEROREQUAL takes two arguments");
+            return GP.GreaterOrEqual(multibit(exps.get(0)),multibit(exps.get(1)));
+        case LESSEROREQUAL:
+            if (exps.size() != 2) throw new Exception("LESSEROREQUAL takes two arguments");
+            return GP.LesserOrEqual(multibit(exps.get(0)),multibit(exps.get(1)));
         default:
             throw new Exception("Unsupported");
         }
@@ -199,7 +217,7 @@ public class Parse {
             long num = Long.parseLong(mdV); // for byte, short, int, and
             for(int j = 0; j < sz; j++) result.add(GP.Const(((num >> j) & 1) == 1));
             return result;
-        case EIGHTBYTE:
+        case SIXPACK:
             strb = mdV.getBytes("UTF-8");
             sz  = fieldSize(mdT) / 8;
             if (sz < strb.length) throw new Exception("String too long");

@@ -42,21 +42,21 @@ public class Test {
         t0 = System.currentTimeMillis();
         (new Parse(sch)).parseMetadataXML(pxml, n);
         SecureRandom.getInstance("SHA1PRNG").nextBytes(new byte[1000000]);
-        t1 = System.currentTimeMillis(); if(time) System.out.println("system warmup time: " + (t1 - t0) + " ms");
+        t1 = System.currentTimeMillis(); if(time) System.out.println("system warmup : " + (t1 - t0) + " ms");
 
         // Init
         t0 = System.currentTimeMillis();
         Parse up = new Parse(sch);
         SecureRandom prng = SecureRandom.getInstance("SHA1PRNG");
         prng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});
-        t1 = System.currentTimeMillis(); if(time) System.out.println("init at pub: " + (t1 - t0) + " ms");
+        t1 = System.currentTimeMillis(); if(time) System.out.println("init at pub   : " + (t1 - t0) + " ms");
 
         // Init
         t0 = System.currentTimeMillis();
         Parse us = new Parse(sch);
         SecureRandom srng = SecureRandom.getInstance("SHA1PRNG");
         srng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});
-        t1 = System.currentTimeMillis(); if(time) System.out.println("init at sub: " + (t1 - t0) + " ms");
+        t1 = System.currentTimeMillis(); if(time) System.out.println("init at sub   : " + (t1 - t0) + " ms");
 
         tBB = System.currentTimeMillis();
 
@@ -67,7 +67,7 @@ public class Test {
         byte[] pgp = Evalprep.mdelements(md,n,m);
         byte[] prseq = new byte[4*m*n];
         byte[] cpgp = new byte[2*m*n];
-        t1 = System.currentTimeMillis(); if(time) System.out.println("preparation at pub: " + (t1 - t0) + " ms");
+        t1 = System.currentTimeMillis(); if(time) System.out.println("prepare at pub: " + (t1 - t0) + " ms");
 
         t0 = System.currentTimeMillis();
 
@@ -76,7 +76,7 @@ public class Test {
 
         t0 = System.currentTimeMillis();
         Evalprep.pblind(prseq,pgp,cpgp);
-        t1 = System.currentTimeMillis(); if(time) System.out.println("blinding at pub: " + (t1 - t0) + " ms");
+        t1 = System.currentTimeMillis(); if(time) System.out.println("blind at pub  : " + (t1 - t0) + " ms");
 
         //
         t0 = System.currentTimeMillis();
@@ -84,7 +84,7 @@ public class Test {
         byte[] sgp = Evalprep.selectorize(si,n,m);
         byte[] srseq = new byte[4*m*n];
         byte[] csgp = new byte[2*m*n+1];
-        t1 = System.currentTimeMillis(); if(time) System.out.println("preparation at sub: " + (t1 - t0) + " ms");
+        t1 = System.currentTimeMillis(); if(time) System.out.println("prepare at sub: " + (t1 - t0) + " ms");
 
         t0 = System.currentTimeMillis();
         Evalprep.randseq(srng, srseq);
@@ -92,15 +92,15 @@ public class Test {
 
         t0 = System.currentTimeMillis();
         Evalprep.sblind(srseq,sgp,csgp);
-        t1 = System.currentTimeMillis(); if(time) System.out.println("blinding at sub: " + (t1 - t0) + " ms");
+        t1 = System.currentTimeMillis(); if(time) System.out.println("blind at sub  : " + (t1 - t0) + " ms");
 
         //
         t0 = System.currentTimeMillis();
         boolean rslt = Evalprep.eval(cpgp,csgp);
         t1 = System.currentTimeMillis(); if(time) System.out.println("eval at broker: " + (t1 - t0) + " ms");
 
-        if(time) System.out.println("end-to-end: " + (t1 - tBB) + " ms");
-        System.out.println("metadata matches interest: " + (rslt ? "yes" : "no"));
+        if(time) System.out.println("end-to-end run: " + (t1 - tBB) + " ms");
+        System.out.println("pub-sub match?: " + (rslt ? "yes" : "no"));
         // Random number generation dominates; use of RDRAND should be
     }
 
@@ -123,26 +123,26 @@ public class Test {
         //GP ct = GP.BitOpBlock(x,y,"And").get(1);
         //GP ct = GP.IfThenElseBlock(GP.Const(true),x,y).get(0);
         //GP ct = GP.Equal(GP.IfThenElseBlock(GP.Const(true),x,y),y);
-        GP ct = GP.Equal(GP.BitOpBlock(x,x,"Or"),x);
+        //GP ct = GP.Equal(GP.BitOpBlock(x,x,"Or"),x);
+        GP ct = GP.GreaterOrEqual(x,y);
 
-        // for(int i = 0; i < 16; i++) System.out.print(Evalprep.getbit(md, i)?1:0); System.out.println();
         byte[]  pgp  = Evalprep.mdelements(md,n,m);
         byte[]  sgp  = Evalprep.selectorize(ct.gp(),n,m);
         boolean rslt = Evalprep.eval(pgp,sgp);
-
-        System.out.println("eval: " + rslt);
+        System.out.println("\ntestGP eval: " + rslt);
     }
 
     public static void main(String[] args) throws Exception {
         String DEEDSCHEMA_XSD = "xml/deedschema.xsd";
         String METADATA_XML   = "xml/mdrecord-example.xml";
         String INTEREST_XML   = "xml/interest-example.xml";
-        String METADATA2_XML   = "xml/mdrecord-example-2.xml";
-        String INTEREST2_XML   = "xml/interest-example-2.xml";
+        String METADATA2_XML  = "xml/mdrecord-example-2.xml";
+        String INTEREST2_XML  = "xml/interest-example-2.xml";
 
-        fullExample(DEEDSCHEMA_XSD, METADATA_XML,  INTEREST_XML,   64,  16384, false);
-        fullExample(DEEDSCHEMA_XSD, METADATA2_XML, INTEREST2_XML, 160, 262144, true);
-
+        System.out.println("\nExample 1: INTELRECORD");
+        fullExample(DEEDSCHEMA_XSD, METADATA_XML,  INTEREST_XML,   32,  16384, false);
+        System.out.println("\nExample 2: STOCKRECORD");
+        fullExample(DEEDSCHEMA_XSD, METADATA2_XML, INTEREST2_XML, 128, 262144, true);
         testGP();
     }
 }
