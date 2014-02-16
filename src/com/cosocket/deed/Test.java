@@ -40,7 +40,7 @@ public class Test {
 
         // Warm up RNG and JVM 
         t0 = System.currentTimeMillis();  
-        (new Parse(sch)).parseMetadataXML(pxml, 64);
+        (new Parse(sch)).parseMetadataXML(pxml, n);
         SecureRandom.getInstance("SHA1PRNG").nextBytes(new byte[1000000]);
         t1 = System.currentTimeMillis(); if(time) System.out.println("system warmup time: " + (t1 - t0) + " ms");
         
@@ -134,10 +134,14 @@ public class Test {
     }
 
     public static void main(String[] args) throws Exception {
+    	String DEEDSCHEMA_XSD = "xml/deedschema.xsd";  
     	String METADATA_XML   = "xml/mdrecord-example.xml";
     	String INTEREST_XML   = "xml/interest-example.xml";
-    	String DEEDSCHEMA_XSD = "xml/deedschema.xsd";   	
-    	fullExample(DEEDSCHEMA_XSD, METADATA_XML, INTEREST_XML, 64, 16384, false);
+    	String METADATA2_XML   = "xml/mdrecord-example-2.xml";
+    	String INTEREST2_XML   = "xml/interest-example-2.xml";
+ 	
+    	fullExample(DEEDSCHEMA_XSD, METADATA_XML,  INTEREST_XML,   64,  16384, false);    	
+    	fullExample(DEEDSCHEMA_XSD, METADATA2_XML, INTEREST2_XML, 160, 262144, true);
     	
     	testGP();
     }

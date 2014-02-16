@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<E OP="AND">
+  <E OP="EQUAL">
+    <E OP="FIELD" TYP="STOCKRECORD" VAL="RECORDTYPE" />
+    <E OP="CODE"  TYP="RECORDTYPECODE" VAL="STOCKRECORD" />
+  </E>
+  <E OP="EQUAL">
+    <E OP="FIELD" TYP="STOCKRECORD" VAL="TICK"/>
+    <E OP="CODE"  TYP="TICKCODE"   VAL="UP"/>
+  </E>
+  <E OP="EQUAL">
+    <E OP="FIELD"     TYP="STOCKRECORD" VAL="STOCKSYM"/>
+    <E OP="EIGHTBYTE" TYP="String"      VAL="MSFT"/>
+  </E>
+  <E OP="EQUAL">
+    <E OP="FIELD"  TYP="STOCKRECORD" VAL="POINTS"/>
+    <E OP="NUM"    TYP="short"         VAL="3"/>
+  </E>  
+   <!-- 
+  <E OP="GREATERTHAN">
+    <E OP="FIELD"  TYP="STOCKRECORD" VAL="PRICE"/>
+    <E OP="NUM"    TYP="int"         VAL="3500"/>
+  </E>
+  -->     
+</E>

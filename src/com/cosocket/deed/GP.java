@@ -116,32 +116,46 @@ public class GP {
 
     // make a block of 2-input Boolean gates
     public static final ArrayList<GP> BitOpBlock(ArrayList<GP> x, ArrayList<GP> y, String boolMethod) throws Exception {
-        assert(x.size() == y.size());
+        if(x.size() != y.size()) throw new Exception ("Unequal length");
         ArrayList<GP> z = new ArrayList<GP>();
         Method M = GP.class.getMethod(boolMethod, GP.class, GP.class);
         for(int i = 0; i < x.size(); i++) z.add((GP)M.invoke(GP.class, x.get(i), y.get(i)));
         return z;
     }
     
-    public static final ArrayList<GP> IfThenElseBlock(GP cond, ArrayList<GP> x, ArrayList<GP> y) {
-        assert(x.size() == y.size());
+    public static final ArrayList<GP> IfThenElseBlock(GP cond, ArrayList<GP> x, ArrayList<GP> y) throws Exception {
+        if(x.size() != y.size()) throw new Exception ("Unequal length");
         ArrayList<GP> z = new ArrayList<GP>();
         for(int i = 0; i < x.size(); i++) z.add(IfThenElse(cond, x.get(i), y.get(i)));
         return z;
     }
     
     public static final ArrayList<GP> ShiftRight(ArrayList<GP> x, int num) {
-        assert(x.size() >= num);
-        for(int i = 0; i < num; i++) {x.remove(0); x.add(GP.Const(false));}
+        int rot = (num <= x.size()) ? num : x.size();
+        for(int i = 0; i < rot; i++) {x.remove(0); x.add(GP.Const(false));}
         return x;
     }
     
     public static final ArrayList<GP> ShiftLeft(ArrayList<GP> x, int num) {
-        assert(x.size() >= num);
-        for(int i = 0; i < num; i++) {x.remove(x.size()-1); x.add(0,GP.Const(false));}
+        int rot = (num <= x.size()) ? num : x.size();
+        for(int i = 0; i < rot; i++) {x.remove(x.size()-1); x.add(0,GP.Const(false));}
         return x;
     }
        
+    /* 
+     * See Expired US Patent 5592142
+     * 
+     * MultiOr(
+     *   (MultiNor (BlockXor x_0:x_k-1 y_0:y_k-1)) 
+     *   (MultiNor (BlockXor x_1:x_k-1 y_1:y_k-1) (Not x0) y0)
+     *   (MultiNor (BlockXor x_2:x_k-1 y_2:y_k-1) (Not x1) y1)
+     *    ...
+     *   (MultiNor (BlockXor x_k-1:y_k-1) (Not x_k-2) y_k-2)
+     *   (MultiNor                        (Not x_k-1) y_k-1) 
+     * )
+     *
+     */
+
     /*
      * TODO: greater-than, add, subtract, parity, k-of-n threshold, majority, ...
        public static final GP Greater(ArrayList<GP> x, ArrayList<GP> y) {

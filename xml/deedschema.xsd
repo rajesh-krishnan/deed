@@ -61,21 +61,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <xsd:simpleType name="OPCODE" final="#all">
   <xsd:restriction base="xsd:string">
-    <xsd:enumeration value="CODE"/>
     <xsd:enumeration value="FIELD"/>
+    <xsd:enumeration value="CODE"/>
+    <xsd:enumeration value="NUM"/>
+    <xsd:enumeration value="EIGHTBYTE"/>
     <xsd:enumeration value="NOT"/>
     <xsd:enumeration value="AND"/>
     <xsd:enumeration value="OR"/>
     <xsd:enumeration value="EQUAL"/>
   </xsd:restriction>
 </xsd:simpleType>
- 
-<xsd:element name="INTELMETADATA" type="INTELRECORD"/>
 
+<!--  Supported metadata record types -->
+<xsd:element name="ZEROMETADATA"  type="ZERORECORD"/> 
+<xsd:element name="INTELMETADATA" type="INTELRECORD"/>
+<xsd:element name="STOCKMETADATA" type="STOCKRECORD"/>
 <xsd:simpleType name="RECORDTYPECODE" final="#all">
   <xsd:restriction base="xsd:string">
     <xsd:enumeration value="ZERORECORD"/>
     <xsd:enumeration value="INTELRECORD"/>
+    <xsd:enumeration value="STOCKRECORD"/>
   </xsd:restriction>
 </xsd:simpleType>
 
@@ -84,6 +89,56 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <xsd:element name="RECORDTYPE" type="RECORDTYPECODE" fixed="ZERORECORD"/>
   </xsd:all>
 </xsd:complexType>
+
+<xsd:complexType name="STOCKRECORD">
+  <xsd:all>
+    <xsd:element name="RECORDTYPE" type="RECORDTYPECODE" fixed="STOCKRECORD"/>
+    <xsd:element name="STOCKSYM"   type="STOCKSYMVAL"/>
+    <xsd:element name="TICK"       type="TICKCODE"/>
+    <xsd:element name="POINTS"     type="POINTSVAL"/>
+    <xsd:element name="PRICE"      type="PRICEVAL"/>
+    <xsd:element name="TIME"       type="UNIXTIMEVAL"/>
+  </xsd:all>
+</xsd:complexType>
+
+<!--  For now, we limit all strings to length 8 bytes or less -->
+<xsd:simpleType name="EIGHTBYTESTR">
+  <xsd:restriction base="xsd:string">
+    <xsd:maxLength value="8"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+<xsd:simpleType name="STOCKSYMVAL" final="#all">
+  <xsd:restriction base="EIGHTBYTESTR">
+    <xsd:pattern   value="[A-Z]+"/>
+    <xsd:maxLength value="5"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+<xsd:simpleType name="UNIXTIMEVAL" final="#all">
+  <xsd:restriction base="xsd:int" />
+</xsd:simpleType>
+
+<xsd:simpleType name="PRICEVAL" final="#all">
+  <xsd:restriction base="xsd:int">
+    <xsd:minInclusive value="0"/>
+    <xsd:maxInclusive value="100000000"/> <!-- $1M in cents -->
+  </xsd:restriction>
+</xsd:simpleType>
+   
+<xsd:simpleType name="POINTSVAL" final="#all">
+  <xsd:restriction base="xsd:short">
+    <xsd:minInclusive value="0"/>
+    <xsd:maxInclusive value="10000"/> <!-- (100.00 percent) * 100 -->
+  </xsd:restriction>
+</xsd:simpleType>
+
+<xsd:simpleType name="TICKCODE" final="#all">
+  <xsd:restriction base="xsd:string">
+    <xsd:enumeration value="UP"/>
+    <xsd:enumeration value="DOWN"/>
+  </xsd:restriction>
+</xsd:simpleType>
 
 <xsd:complexType name="INTELRECORD">
   <xsd:all>

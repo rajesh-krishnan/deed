@@ -65,6 +65,11 @@ public class Parse {
 		fieldStartTbl   = new Hashtable<String,Integer>();
 		fieldSizeTbl    = new Hashtable<String,Integer>();
 		ordinalValueTbl = new Hashtable<String,Integer>();
+	    fieldSizeTbl.put("byte",8);
+	    fieldSizeTbl.put("short",16);
+	    fieldSizeTbl.put("int",32);
+	    fieldSizeTbl.put("long",64);
+	    fieldSizeTbl.put("String", 64);  // fixed-width fields, so string must be 8 bytes or less
 		for(RECORDTYPECODE r : RECORDTYPECODE.class.getEnumConstants()) 
 		   	determineSizes(Class.forName(pkgName + "." + r.toString()));
 	}
@@ -89,13 +94,13 @@ public class Parse {
        	    	if(!fieldName.equals("RECORDTYPE")) flds.add(fieldName);
     			Class<?> fld = (Class<?>) m.getGenericReturnType();
     			String fieldType = fld.getSimpleName();
+    	    	fieldTypeTbl.put(className + ":" + fieldName, fieldType);
     			if(fld.isEnum()) {
         	        int fieldSize = Evalprep.bitsNeeded(fld.getEnumConstants().length);
-        	    	fieldTypeTbl.put(className + ":" + fieldName, fieldType);
         	    	fieldSizeTbl.put(fieldType,fieldSize);
     				for (Object x : fld.getEnumConstants())
             	    	ordinalValueTbl.put(fieldType + ":" + x.toString(), ((Enum<?>) x).ordinal());
-        	    } // handle xsd:int and xsd:binary here? 
+    			}
     		}
     	}
 	  	int index=0; // use alphabetical order as reflection does not guarantee declaration order
@@ -115,15 +120,25 @@ public class Parse {
 		int[] result = new int[(n - 1) / 32 + 1];    
     	for (String fieldName : getFields(className)) {
     	    String fieldType = this.fieldType(className, fieldName);
-    	    Object y = cls.getClass().getMethod("get" + fieldName).invoke(cls);  			
+    	    Object y = cls.getClass().getMethod("get" + fieldName).invoke(cls);
+    	    int index = this.fieldStart(className, fieldName);
+    	    int szbits = this.fieldSize(fieldType);
             if(y.getClass().isEnum()) {            		
         	    String value = y.toString();
-        	    int index = this.fieldStart(className, fieldName);
-        	    int szbits = this.fieldSize(fieldType);
         	    int ordval = this.ordinalValue(fieldType, value); 
         	    for(int j=0; j < szbits; j++)            		
                 	if(((ordval >> j) & 1) == 1) Evalprep.setbit(result, index+j);
-        	} // handle xsd:int and xsd:binary here? 
+        	} else if (fieldType.equals("String")) {
+        		byte str[] = ((String) y).getBytes("UTF-8");
+        		if(str.length > (szbits / 8)) throw new Exception("String too long");
+        		for(int k = 0; k < str.length; k++)
+                  	for(int j = 0; j < 8; j++)
+              	        if (((str[k] >> j) & 1) == 1) Evalprep.setbit(result, index+(8*k)+j);
+        	} else if (fieldType.matches("byte|short|int|long")) {
+            	long num = Long.parseLong(y.toString()); // for byte, short, int, and long
+    	    	for(int j = 0; j < szbits; j++) 
+    	    		if(((num >> j) & 1) == 1) Evalprep.setbit(result, index+j);        	
+        	}
     	}		
 		return result;
     }
@@ -163,23 +178,39 @@ public class Parse {
     	String mdT, mdV;
 		ArrayList<GP> result = new ArrayList<GP>();
 		int x, sz;
-		
+		byte[] strb;
+
+	    mdT = y.getTYP();
+	    mdV = y.getVAL();
+	    
     	switch(y.getOP()) {
-	    case CODE: 
-    	    mdT = y.getTYP();
-    	    mdV = y.getVAL();
-	    	x   = ordinalValue(mdT, mdV); 
-	    	sz  = fieldSize(mdT);
-	    	for(int j = 0; j < sz; j++) result.add(GP.Const(((x >> j) & 1) == 1));	    	
-    	    return result;
         case FIELD:
-    	    mdT = y.getTYP();
-    	    mdV = y.getVAL();
 	    	x   = fieldStart(mdT, mdV); 
 	    	sz  = fieldSize(fieldType(mdT,mdV));
     	    for(int j = 0; j < sz; j++) result.add(GP.Pin(x + j)); 
         	return result;
-        default: 
+    	case CODE: 
+	    	x   = ordinalValue(mdT, mdV); 
+	    	sz  = fieldSize(mdT);
+	    	for(int j = 0; j < sz; j++) result.add(GP.Const(((x >> j) & 1) == 1));	    	
+    	    return result;
+        case NUM:
+	    	sz  = fieldSize(mdT);
+        	long num = Long.parseLong(mdV); // for byte, short, int, and long
+	    	for(int j = 0; j < sz; j++) result.add(GP.Const(((num >> j) & 1) == 1));	    	
+    	    return result;        	
+        case EIGHTBYTE:
+          	strb = mdV.getBytes("UTF-8");
+            sz  = fieldSize(mdT) / 8;
+            if (sz < strb.length) throw new Exception("String too long");
+          	for(int k = 0; k < strb.length; k++)
+              	for(int j = 0; j < 8; j++)
+          	        result.add(GP.Const(((strb[k] >> j) & 1) == 1));
+          	for(int k = strb.length; k < sz; k++)
+          		for(int j = 0; j < 8; j++)
+          	        result.add(GP.Const(false));
+          	return result;
+        default:
     	    throw new Exception("Unsupported");
         } 	
 	}	
