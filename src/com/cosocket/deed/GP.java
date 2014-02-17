@@ -46,6 +46,15 @@ public class GP {
     private GP(int x)     {gp = new int[]{S5.I,x,S5.I};}
     private GP(int[] x)   {gp = x;}
 
+    private static int[] concat(int[] lt, int[] rt) {
+        int[] gp = new int[lt.length + rt.length - 1];
+        System.arraycopy(lt,0,gp,0,lt.length);
+        int x    = lt.length - 1;
+        gp[x]    = S5.gmul[gp[x]][rt[0]];
+        System.arraycopy(rt,1,gp,x+1,rt.length-1);
+        return gp;
+    }
+
     private static int[] invert(int[] x) {
         int[] gp = x.clone();
         int e     = gp.length - 1;
@@ -77,13 +86,14 @@ public class GP {
     public static final GP Pin(int a)                   {return new GP(a);}
     public static final GP Not(GP a)                    {return new GP(invert(a.gp()));}
     public static final GP And(GP a, GP b)              {return new GP(conjunct(a.gp(), b.gp()));}
+    public static final GP Xor(GP a, GP b)              {return new GP(concat(And(Not(a),b).gp(), And(a,Not(b)).gp()));}
     public static final GP Nand(GP a, GP b)             {return Not(And(a, b));}
     public static final GP Nor(GP a, GP b)              {return And(Not(a), Not(b));}
     public static final GP Or(GP a, GP b)               {return Not(Nor(a, b));}
-    public static final GP Xor(GP a, GP b)              {return Or(And(Not(a),b), And(a,Not(b)));}
-    public static final GP Xnor(GP a, GP b)             {return Or(And(a,b), And(Not(a),Not(b)));}
+    public static final GP Xnor(GP a, GP b)             {return Not(Xor(a,b));}
+    public static final GP NaiveXor(GP a, GP b)         {return Or(And(Not(a),b), And(a,Not(b)));}
     public static final GP Select(GP x, GP a, GP b)     {return Or(And(Not(x), a), And(x,b));}
-    public static final GP IfThenElse(GP x, GP a, GP b) {return Or(And(x, a), And(Not(x),b));}
+    public static final GP IfThenElse(GP x, GP a, GP b) {return Select(x, b, a);}
     public static final GP MultiNand(ArrayList<GP> x)   {return Not(MultiAnd(x));}
     public static final GP MultiNor(ArrayList<GP> x)    {return Not(MultiOr(x));}
     public static final GP AddSum(GP a, GP b, GP c)     {return Xor(Xor(a,b),c);}
@@ -143,9 +153,8 @@ public class GP {
     }
 
     /*
-     * See Expired US Patent 5592142
      *
-     * MultiOr(
+     * (MultiOr
      *   (MultiNor (BlockXor x_0:x_k-1 y_0:y_k-1))
      *   (MultiNor (BlockXor x_1:x_k-1 y_1:y_k-1) (Not x0) y0)
      *   (MultiNor (BlockXor x_2:x_k-1 y_2:y_k-1) (Not x1) y1)
