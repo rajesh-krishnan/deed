@@ -86,12 +86,12 @@ public class GP {
     public static final GP Pin(int a)                   {return new GP(a);}
     public static final GP Not(GP a)                    {return new GP(invert(a.gp()));}
     public static final GP And(GP a, GP b)              {return new GP(conjunct(a.gp(), b.gp()));}
-    public static final GP Xor(GP a, GP b)              {return new GP(concat(And(Not(a),b).gp(), And(a,Not(b)).gp()));}
     public static final GP Nand(GP a, GP b)             {return Not(And(a, b));}
     public static final GP Nor(GP a, GP b)              {return And(Not(a), Not(b));}
     public static final GP Or(GP a, GP b)               {return Not(Nor(a, b));}
     public static final GP Xnor(GP a, GP b)             {return Not(Xor(a,b));}
     public static final GP NaiveXor(GP a, GP b)         {return Or(And(Not(a),b), And(a,Not(b)));}
+    public static final GP BetterXor(GP a, GP b)        {return new GP(concat(And(Not(a),b).gp(), And(a,Not(b)).gp()));}
     public static final GP Select(GP x, GP a, GP b)     {return Or(And(Not(x), a), And(x,b));}
     public static final GP IfThenElse(GP x, GP a, GP b) {return Select(x, b, a);}
     public static final GP MultiNand(ArrayList<GP> x)   {return Not(MultiAnd(x));}
@@ -100,6 +100,12 @@ public class GP {
     public static final GP AddCarry(GP a, GP b, GP c)   {return Or(And(a,b), And(Or(a,b),c));}
     public static final GP SubDiff(GP a, GP b, GP c)    {return AddSum(a,b,c);}
     public static final GP SubBorrow(GP a, GP b, GP c)  {return Or(And(a, And(b,c)), And(Not(a), Or(b,c)));}
+
+    public static final GP Xor(GP a, GP b) {
+        int[] c0 = new int[]{S5.A2AIAIL};
+        int[] c1 = new int[]{S5.A2AIAIR};
+        return new GP(concat(concat(concat(concat(a.gp(), b.gp()), c0), And(a,b).gp()), c1));
+    }
 
     public static final GP MultiAnd(ArrayList<GP> x) {
         while(x.size() > 1) {

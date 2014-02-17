@@ -65,21 +65,23 @@ For efficency, we use pre-computed tables in this implementation.
 */
 
 public final class S5 {
-    public static final byte I     =   0;
-    public static final byte A     =  33;
-    public static final byte B     =  71;
-    public static final byte AI    =  96;
-    public static final byte BI    = 115;
-    public static final byte INVL  =  29;
-    public static final byte INVR  =  23;
-    public static final byte G2AL  =   7;
-    public static final byte G2AR  =   7;
-    public static final byte A2BL  =   8;
-    public static final byte A2BR  =  12;
-    public static final byte A2AIL =  23;
-    public static final byte A2AIR =  23;
-    public static final byte A2BIL =  19;
-    public static final byte A2BIR =  11;
+    public static final byte I       =   0;
+    public static final byte A       =  33;
+    public static final byte B       =  71;
+    public static final byte AI      =  96;
+    public static final byte BI      = 115;
+    public static final byte INVL    =  29;
+    public static final byte INVR    =  23;
+    public static final byte G2AL    =   7;
+    public static final byte G2AR    =   7;
+    public static final byte A2BL    =   8;
+    public static final byte A2BR    =  12;
+    public static final byte A2AIL   =  23;
+    public static final byte A2AIR   =  23;
+    public static final byte A2BIL   =  19;
+    public static final byte A2BIR   =  11;
+    public static final byte A2AIAIL =  13;
+    public static final byte A2AIAIR =  10;
 
     public static final byte[] ginv = {0,1,2,4,3,5,6,7,12,18,13,19,8,10,14,20,16,22,9,11,15,21,17,23,24,25,26,28,27,29,48,49,72,96,73,97,50,52,74,98,76,100,51,53,75,99,77,101,30,31,36,42,37,43,54,55,78,102,79,103,60,66,84,108,90,114,61,67,85,109,91,115,32,34,38,44,40,46,56,58,80,104,82,106,62,68,86,110,92,116,64,70,88,112,94,118,33,35,39,45,41,47,57,59,81,105,83,107,63,69,87,111,93,117,65,71,89,113,95,119};
     public static final byte[][] gmul = new byte[120][];

@@ -68,8 +68,7 @@ public class Test {
 
         // Process at Pub
         t0 = System.currentTimeMillis();
-        int[] md = up.parseMetadataXML(pxml, n);
-
+        int[]  md = up.parseMetadataXML(pxml, n);
         byte[] pgp = Evalprep.mdelements(md,n,m);
         byte[] prseq = new byte[4*m*n];
         byte[] cpgp = new byte[2*m*n];
@@ -120,7 +119,7 @@ public class Test {
 
     protected static void testGP() throws Exception {
         int n = 8;
-        int m = 32768;
+        int m = 16384;
         int[] md = new int[(n - 1)/32 + 1];
         GP ct = null;
         ArrayList<GP> x = new ArrayList<GP>();
@@ -129,9 +128,7 @@ public class Test {
         helper(n, md, x, 3, y, 5);
         ct = GP.LesserOrEqual(x,y);
         //ct = GP.Equal(x,GP.ShiftRight(y,1));
-        //ct = GP.BitOpBlock(x,y,"And").get(1);
         //ct = GP.Equal(GP.BitOpBlock(x,x,"Or"),x);
-        //ct = GP.IfThenElseBlock(GP.Const(false),x,y).get(0);
         //ct = GP.Equal(GP.IfThenElseBlock(GP.Const(true),x,y),y);
 
         byte[]  pgp  = Evalprep.mdelements(md,n,m);
@@ -143,7 +140,7 @@ public class Test {
     public static void main(String[] args) throws Exception {
         testGP();
         System.out.println("\nExample 1: INTELRECORD");
-        fullExample(DEEDSCHEMA_XSD, METADATA_XML,  INTEREST_XML,   32,  2048, false);
+        fullExample(DEEDSCHEMA_XSD, METADATA_XML,  INTEREST_XML,   32,  1024, false);
         System.out.println("\nExample 2: STOCKRECORD");
         fullExample(DEEDSCHEMA_XSD, METADATA2_XML, INTEREST2_XML, 128, 131072, true);
     }
