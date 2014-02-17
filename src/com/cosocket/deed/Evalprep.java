@@ -50,9 +50,9 @@ public class Evalprep {
     public static final byte[] mdelements(int[] md, int n, int m) {
         assert(md.length == ((n - 1) / 32) + 1);
         byte[] pgp = new byte[2*m*n];
-        for(int i = 0; i < n; i++)
-            if(getbit(md,i))
-                for (int j = 0; j < m; j++) {pgp[2*(j*n+i)]=S5.A; pgp[2*(j*n+i)+1]=S5.AI;}
+        for (int j = 0; j < m; j++)
+            for(int i = 0; i < n; i++)
+                if(getbit(md,i)) {pgp[2*(j*n+i)]=S5.A; pgp[2*(j*n+i)+1]=S5.AI;}
         return pgp;
     }
 

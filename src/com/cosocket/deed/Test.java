@@ -44,17 +44,13 @@ public class Test {
     protected static void fullExample(String sch, String pxml, String sxml, int n, int m, boolean detail) throws Exception {
         long tBB, t0,t1;
 
-        // Warm up RNG
-        t0 = System.currentTimeMillis();
-        (new Parse(sch)).parseMetadataXML(pxml, n);
-        SecureRandom.getInstance("SHA1PRNG").nextBytes(new byte[1000000]);
-        t1 = System.currentTimeMillis(); if(detail) System.out.println("system warmup : " + (t1 - t0) + " ms");
-
         // Init at Pub
         t0 = System.currentTimeMillis();
         Parse up = new Parse(sch);
         SecureRandom prng = SecureRandom.getInstance("SHA1PRNG");
         prng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});
+        byte[] prseq = new byte[4*m*n];
+        byte[] cpgp = new byte[2*m*n];
         t1 = System.currentTimeMillis(); if(detail) System.out.println("init at pub   : " + (t1 - t0) + " ms");
 
         // Init at Sub
@@ -62,6 +58,8 @@ public class Test {
         Parse us = new Parse(sch);
         SecureRandom srng = SecureRandom.getInstance("SHA1PRNG");
         srng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});
+        byte[] srseq = new byte[4*m*n];
+        byte[] csgp = new byte[2*m*n+1];
         t1 = System.currentTimeMillis(); if(detail) System.out.println("init at sub   : " + (t1 - t0) + " ms");
 
         tBB = System.currentTimeMillis();
@@ -70,8 +68,6 @@ public class Test {
         t0 = System.currentTimeMillis();
         int[]  md = up.parseMetadataXML(pxml, n);
         byte[] pgp = Evalprep.mdelements(md,n,m);
-        byte[] prseq = new byte[4*m*n];
-        byte[] cpgp = new byte[2*m*n];
         t1 = System.currentTimeMillis(); if(detail) System.out.println("prepare at pub: " + (t1 - t0) + " ms");
 
         t0 = System.currentTimeMillis();
@@ -86,8 +82,6 @@ public class Test {
         t0 = System.currentTimeMillis();
         int[] si = us.parseInterestXML(sxml, n, m);
         byte[] sgp = Evalprep.selectorize(si,n,m);
-        byte[] srseq = new byte[4*m*n];
-        byte[] csgp = new byte[2*m*n+1];
         t1 = System.currentTimeMillis(); if(detail) System.out.println("prepare at sub: " + (t1 - t0) + " ms");
 
         t0 = System.currentTimeMillis();
