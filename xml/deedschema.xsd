@@ -38,14 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
      Author: Dr. Rajesh Krishnan <krash@cosocket.com>
 
      The DEED parser relies on Java code generated from this file using JAXB:
-     xjc -d <srcdir> -p com.cosocket.deed.xjcgen deedschema.
-
-     Fixed records of non-extensible enumerations of xsd:string are supported
-     Support for xsd:int and xsd:binary fields are anticipated in the
+     xjc -d <srcdir> -p com.cosocket.deed.xjcgen deedschema.xsd
 
      Using CAPITAL for enums to be automatically typesafe without JAXB
-
-     RECORDTYPE is always the first field and supported records are enumerated in
+     RECORDTYPE is always the first field 
 -->
 
 <xsd:element name="E" type="EXPR"/>
