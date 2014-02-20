@@ -1,32 +1,34 @@
 package com.cosocket.deed;
+import java.security.SecureRandom;
+import java.util.Random;
 
 /*
-Copyright (c) 2014, Cosocket
+Copyright (c) 2014, Cosocket LLC
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice,
+* Redistributions of source code must retain the above copyright notice, this
   list of conditions and the following disclaimer.
 
-* Redistributions in binary form must reproduce the above copyright notice,
-  list of conditions and the following disclaimer in the documentation and/
+* Redistributions in binary form must reproduce the above copyright notice, this
+  list of conditions and the following disclaimer in the documentation and/or
   other materials provided with the distribution.
 
-* Neither the name of the {organization} nor the names of
-  contributors may be used to endorse or promote products derived
+* Neither the name of the {organization} nor the names of its
+  contributors may be used to endorse or promote products derived from
   this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
@@ -85,6 +87,8 @@ public final class S5 {
 
     public static final byte[] ginv = {0,1,2,4,3,5,6,7,12,18,13,19,8,10,14,20,16,22,9,11,15,21,17,23,24,25,26,28,27,29,48,49,72,96,73,97,50,52,74,98,76,100,51,53,75,99,77,101,30,31,36,42,37,43,54,55,78,102,79,103,60,66,84,108,90,114,61,67,85,109,91,115,32,34,38,44,40,46,56,58,80,104,82,106,62,68,86,110,92,116,64,70,88,112,94,118,33,35,39,45,41,47,57,59,81,105,83,107,63,69,87,111,93,117,65,71,89,113,95,119};
     public static final byte[][] gmul = new byte[120][];
+    @SuppressWarnings("unused")
+    private static boolean inited = ldm0() && ldm1();
 
     private static final boolean ldm0() {
         gmul[0] = new byte[]{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119};
@@ -212,7 +216,14 @@ public final class S5 {
         gmul[119] = new byte[]{119,118,117,116,115,114,113,112,111,110,109,108,107,106,105,104,103,102,101,100,99,98,97,96,95,94,93,92,91,90,89,88,87,86,85,84,83,82,81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65,64,63,62,61,60,59,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
         return true;
     }
+    
+    // gmul[gmul[gmul[qA2AL[x]][x]][A]][q2AR[x]] = A ; gmul[gmul[gmul[qA2AL[x]][x]][I]][q2AR[x]] = I ;
+    public static final byte[] qA2AL = {96,97,98,100,99,101,102,103,108,114,109,115,104,106,110,116,112,118,105,107,111,117,113,119,114,115,116,118,117,119,112,113,105,96,104,97,109,111,107,98,102,100,108,110,106,99,103,101,100,101,106,112,107,113,118,119,111,102,110,103,99,105,117,108,96,114,98,104,116,109,97,115,97,99,103,109,105,111,115,117,113,104,108,106,101,107,119,110,98,116,96,102,114,112,100,118,96,98,102,108,104,110,114,116,112,105,109,107,100,106,118,111,99,117,97,103,115,113,101,119};
+    public static final byte[] qA2AR = {33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0};
 
-    @SuppressWarnings("unused")
-    private static boolean inited = ldm0() && ldm1();
+    public static final void randseq(SecureRandom prng, byte[] rseq) {randseq((Random)prng,rseq);}
+    public static final void randseq(Random prng, byte[] rseq) {
+        prng.nextBytes(rseq);
+        for (int i = 0; i < rseq.length; i++) rseq[i] = (byte)((rseq[i] & 0x7f) % 120);
+    }
 }
