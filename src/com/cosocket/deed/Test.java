@@ -41,14 +41,30 @@ public class Test {
     protected static final String METADATA2_XML  = "xml/mdrecord-example-2.xml";
     protected static final String INTEREST2_XML  = "xml/interest-example-2.xml";
 
+    // gmul[gmul[gmul[qA2AL[x]][x]][A]][q2AR[x]] = A ; gmul[gmul[gmul[qA2AL[x]][x]][I]][q2AR[x]] = I ;
+    public static final byte[] qA2AL = {96,97,98,100,99,101,102,103,108,114,109,115,104,106,110,116,112,118,105,107,111,117,113,119,114,115,116,118,117,119,112,113,105,96,104,97,109,111,107,98,102,100,108,110,106,99,103,101,100,101,106,112,107,113,118,119,111,102,110,103,99,105,117,108,96,114,98,104,116,109,97,115,97,99,103,109,105,111,115,117,113,104,108,106,101,107,119,110,98,116,96,102,114,112,100,118,96,98,102,108,104,110,114,116,112,105,109,107,100,106,118,111,99,117,97,103,115,113,101,119};
+    public static final byte[] qA2AR = {33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0,64,64,64,64,64,64,90,90,96,0,96,0,90,90,96,0,96,0,90,90,96,0,96,0};
+
+    // XXX: doesn't quite obfuscate
+    public static final void obfuscate(byte[] r, byte[] d, byte[] o) {
+        assert(o.length == d.length);
+        assert(r.length >= d.length - 1);
+        o[0]=S5.gmul[S5.gmul[d[0]][qA2AL[r[0]]]][r[0]];
+        for (int i = 1; i < d.length - 1; i++)
+            o[i] = S5.gmul[S5.gmul[S5.gmul[qA2AR[r[i-1]]][d[i]]][qA2AL[r[i]]]][r[i]];
+        o[d.length-1]=S5.gmul[qA2AR[r[d.length - 2]]][d[d.length-1]];
+    }
+
     protected static void fullExample(String sch, String pxml, String sxml, int n, int m, boolean flip, boolean obfuscate, boolean detail) throws Exception {
         long tBB, t0,t1;
+        byte[] sharedKey  = new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10};
+        byte[] privateKey = new byte[]{-1,1,-2,2,-3,3,-4,4,-5,5,-6,6,-7,7,-8,8,-9,9,-10,10};
 
         // Init at Pub
         t0 = System.currentTimeMillis();
         Parse up = new Parse(sch);
         SecureRandom prng = SecureRandom.getInstance("SHA1PRNG");
-        prng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});
+        prng.setSeed(sharedKey);
         byte[] prseq = new byte[4*m*n];
         byte[] cpgp = new byte[2*m*n];
         t1 = System.currentTimeMillis(); if(detail) System.out.println("init at pub   : " + (t1 - t0) + " ms");
@@ -57,12 +73,12 @@ public class Test {
         t0 = System.currentTimeMillis();
         Parse us = new Parse(sch);
         SecureRandom srng = SecureRandom.getInstance("SHA1PRNG");
-        srng.setSeed(new byte[]{1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,-7,8,-8,9,-9,10,-10});
+        srng.setSeed(sharedKey);
         byte[] srseq = new byte[4*m*n];
         byte[] csgp = new byte[2*m*n+1];
-        
+
         SecureRandom obfs = SecureRandom.getInstance("SHA1PRNG");
-        obfs.setSeed(new byte[]{-1,1,-2,2,-3,3,-4,4,-5,5,-6,6,-7,7,-8,8,-9,9,-10,10});
+        obfs.setSeed(privateKey);
         byte[] obseq = new byte[2*m*n];
         byte[] osgp = new byte[2*m*n+1];
         t1 = System.currentTimeMillis(); if(detail) System.out.println("init at sub   : " + (t1 - t0) + " ms");
@@ -88,21 +104,21 @@ public class Test {
         int[] si = us.parseInterestXML(sxml, n, m);
         byte[] sgp = Evalprep.selectorize(si,n,m,flip);
         t1 = System.currentTimeMillis(); if(detail) System.out.println("prepare at sub: " + (t1 - t0) + " ms");
-      
+
         if(obfuscate) {
             t0 = System.currentTimeMillis();
             S5.randseq(obfs, obseq);
             t1 = System.currentTimeMillis(); if(detail) System.out.println("randseq at obfs: " + (t1 - t0) + " ms");
-       
+
             t0 = System.currentTimeMillis();
-            Evalprep.obfuscate(obseq,sgp,osgp);
+            obfuscate(obseq,sgp,osgp);
             t1 = System.currentTimeMillis(); if(detail) System.out.println("obfusc at sub:  " + (t1 - t0) + " ms");
         }
-               
+
         t0 = System.currentTimeMillis();
         S5.randseq(srng, srseq);
         t1 = System.currentTimeMillis(); if(detail) System.out.println("randseq at sub: " + (t1 - t0) + " ms");
-             
+
         t0 = System.currentTimeMillis();
         Evalprep.sblind(srseq,(obfuscate?osgp:sgp),csgp);
         t1 = System.currentTimeMillis(); if(detail) System.out.println("blind at sub  : " + (t1 - t0) + " ms");
@@ -148,37 +164,10 @@ public class Test {
     }
 
     public static void main(String[] args) throws Exception {
-        byte[] sgp   = new byte[]{S5.I,S5.G2AL,S5.A,S5.B,S5.AI,S5.BI,S5.G2AR,S5.I,S5.I};
-        byte[] pgp   = new byte[sgp.length - 1];
-        byte[] obseq = new byte[sgp.length];
-    	SecureRandom obfs = SecureRandom.getInstance("SHA1PRNG");
-        obfs.setSeed(new byte[]{-1,1,-2,2,-3,3,-4,4,-5,5,-6,6,-7,7,-8,8,-9,9,-10,10});
-        S5.randseq(obfs, obseq);
-        
-        for(int i : pgp)   System.out.print(i + " "); System.out.println();
-        for(int i : sgp)   System.out.print(i + " "); System.out.println();
-        for(int i : obseq) System.out.print(i + " "); System.out.println();
-        System.out.println("Clear eval: " + Evalprep.eval(pgp,sgp));
-
-        /*
-        byte[] osgp  = new byte[sgp.length];
-        for(int i = 0; i < osgp.length - 1; i++) osgp[i] = S5.gmul[sgp[i]][obseq[i]];
-        for(int i : osgp)  System.out.print(i + " "); System.out.println();        
-        
-        osgp[0]   = S5.gmul[S5.qA2AL[obseq[0]]][obseq[i]];
-        for(int i = 0; i < osgp.length - 1; i++) {
-        	
-        	osgp[i+1] = S5.gmul[S5.qA2AR[obseq[i]]][osgp[i+1]];
-        }
-        for(int i : osgp)  System.out.print(i + " "); System.out.println(); 
-        
-        System.out.println("Obfus eval: " + Evalprep.eval(pgp,osgp));
-        */    
-        
-    	testGP();
+        testGP();
         System.out.println("\nExample 1: INTELRECORD");
         fullExample(DEEDSCHEMA_XSD, METADATA_XML,  INTEREST_XML,   32,   1024, true, false, false);
         System.out.println("\nExample 2: STOCKRECORD");
-        fullExample(DEEDSCHEMA_XSD, METADATA2_XML, INTEREST2_XML, 128, 131072, true, false, true);
+        fullExample(DEEDSCHEMA_XSD, METADATA2_XML, INTEREST2_XML, 128, 131072, false, true, true);
     }
 }

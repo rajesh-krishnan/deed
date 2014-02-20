@@ -32,14 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 public class Evalprep {
-	public static final boolean valideval(byte[] p, byte[] s) throws Exception {
-		if(s.length != p.length + 1) throw new Exception("Incorrect GP lengths");
-		byte a = eval(p,s);
+    public static final boolean valideval(byte[] p, byte[] s) throws Exception {
+        if(s.length != p.length + 1) throw new Exception("Incorrect GP lengths");
+        byte a = eval(p,s);
         if(!(a == S5.A || a == S5.I)) throw new Exception("Not alpha-computing");
         return a == S5.A;
-	}
-	
-    protected static final byte eval(byte[] p, byte[] s) {        
+    }
+
+    protected static final byte eval(byte[] p, byte[] s) {
         byte a = S5.I;
         for (int i = 0; i < p.length; i++) a = S5.gmul[S5.gmul[a][s[i]]][p[i]];
         return S5.gmul[a][s[p.length]];
@@ -50,23 +50,12 @@ public class Evalprep {
     protected static final void clearbit(int[] d, int j) {d[(j / 32)] &= ~(1 << (j % 32));}
     protected static final int bitsNeeded(int a) {return a == 0 ? 0 : 32 - Integer.numberOfLeadingZeros(a - 1);}
 
-    protected static byte[] makeS5Bytes(int md[], int n) {
-        byte[] tmp = new byte[n];
-        for(int i = 0; i < n; i++) if(getbit(md,i)) tmp[i]=S5.A;
-        return tmp;
-    }
-    
-    protected static byte[] makeS5Pairs(int md[], int n, boolean flip) {
-        byte[] tmp = new byte[2*n];
-        for(int i = 0; i < n; i++) if(getbit(md,i)) {tmp[2*i]=S5.A; tmp[2*i+1] = flip ? S5.AI : S5.A;}
-        return tmp;
-    }
-    
     public static final byte[] mdelements(int[] md, int n, int m, boolean flip) {
         assert(md.length == ((n - 1) / 32) + 1);
         byte[] pgp = new byte[2*m*n];
-        byte[] tmp = makeS5Pairs(md, n, flip);
-        for (int j = 0; j < pgp.length; j+=tmp.length) System.arraycopy(tmp, 0, pgp, j, tmp.length);        
+        byte[] tmp = new byte[2*n];
+        for(int i = 0; i < n; i++) if(getbit(md,i)) {tmp[2*i]=S5.A; tmp[2*i+1] = flip ? S5.AI : S5.A;}
+        for (int j = 0; j < pgp.length; j+=tmp.length) System.arraycopy(tmp, 0, pgp, j, tmp.length);
         return pgp;
     }
 
@@ -86,46 +75,36 @@ public class Evalprep {
      *
      */
     public static final byte[] selectorize(int[] gp, int n, int m, boolean flip) throws Exception {
-    	if((gp.length % 2 != 1) || (gp.length > 2*m + 1)) throw new Exception("GP too long");
-        byte[] sgp = new byte[2*m*n + 1];         
+        if((gp.length % 2 != 1) || (gp.length > 2*m + 1)) throw new Exception("GP too long");
+        byte[] sgp = new byte[2*m*n + 1];
         if(!flip) for (int j = 1; j < sgp.length; j+=2) {sgp[j]=S5.A2AIL; sgp[j+1]=S5.A2AIR;}
         for (int j = 0; j < gp.length - 1; j+=2) {
             int p    = j*n;
-            int q    = p+2*n;           
+            int q    = p+2*n;
             sgp[p]   = S5.gmul[sgp[p]][gp[j]];
             int k    = p + 1 + 2 * gp[j+1];
             sgp[k]   = S5.gmul[S5.B][sgp[k]];
             sgp[k+1] = S5.gmul[sgp[k+1]][S5.BI];
             sgp[p]   = S5.gmul[sgp[p]][S5.G2AL];
-            sgp[q]   = S5.gmul[sgp[q]][S5.G2AR];              
+            sgp[q]   = S5.gmul[sgp[q]][S5.G2AR];
          }
-         sgp[gp.length*n] = S5.gmul[sgp[gp.length*n]][gp[gp.length-1]];         
+         sgp[gp.length*n] = S5.gmul[sgp[gp.length*n]][gp[gp.length-1]];
          return sgp;
     }
-    
+
     public static final void pblind(byte[] r, byte[] d, byte[] o) {
-    	assert(o.length == d.length);
+        assert(o.length == d.length);
         assert(r.length >= 2 * d.length - 1);
         for (int i = 0; i < d.length; i++)
             o[i] = S5.gmul[S5.gmul[r[2*i]][d[i]]][S5.ginv[r[2*i+1]]];
     }
 
     public static final void sblind(byte[] r, byte[] d, byte[] o) {
-    	assert(o.length == d.length);
-    	assert(r.length >= 2 * d.length - 2);
+        assert(o.length == d.length);
+        assert(r.length >= 2 * d.length - 2);
         o[0]=S5.gmul[d[0]][S5.ginv[r[0]]];
         for (int i = 1; i < d.length - 1; i++)
             o[i] = S5.gmul[S5.gmul[r[2*i-1]][d[i]]][S5.ginv[r[2*i]]];
         o[d.length-1]=S5.gmul[r[2*d.length - 3]][d[d.length-1]];
     }
-    
-    // XXX: doesn't quite obfuscate
-    public static final void obfuscate(byte[] r, byte[] d, byte[] o) {
-    	assert(o.length == d.length);       
-    	assert(r.length >= d.length - 1);
-        o[0]=S5.gmul[S5.gmul[d[0]][S5.qA2AL[r[0]]]][r[0]];
-        for (int i = 1; i < d.length - 1; i++)        	
-            o[i] = S5.gmul[S5.gmul[S5.gmul[S5.qA2AR[r[i-1]]][d[i]]][S5.qA2AL[r[i]]]][r[i]];
-        o[d.length-1]=S5.gmul[S5.qA2AR[r[d.length - 2]]][d[d.length-1]];
-    }    
 }
