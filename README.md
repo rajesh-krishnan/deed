@@ -1,7 +1,7 @@
 deed
 ====
 
-Decision Evaluation in Encrypted Domain: securely evaluating encrypted Boolean expressions on encrypted bits without decryption. This is a Java implementation of the approach described in the paper below. We also provide a [quick Javascript demo](https://rajesh-krishnan/deed/jsm/jsmdemo.html).
+Decision Evaluation in Encrypted Domain: securely evaluating encrypted Boolean expressions on encrypted bits without decryption. This is a Java implementation of the approach described in the paper below. We also provide a quick Javascript demo in the jsm directory. After you clone the repo, you can go to the jsm directory and view `jsmdemo.html` in a browser.
 
 Reference:
 Rajesh Krishnan, and Ravi Sundaram, "Evaluating Encrypted Boolean Functions 
